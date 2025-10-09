@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты диагностики</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .disease-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .disease-card:hover {
+            transform: translateY(-5px);
+            border-color: #007bff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .probability-bar {
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border-radius: 10px;
+            transition: width 1s ease-in-out;
+        }
+        .confidence-high { color: #28a745; }
+        .confidence-medium { color: #fd7e14; }
+        .confidence-low { color: #dc3545; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow border-0">
+                    <div class="card-header bg-primary text-white py-4">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h2 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Результаты анализа симптомов
+                                </h2>
+                            </div>
+                            <div class="col-auto">
+                                <span class="badge bg-light text-primary fs-6">
+                                    {{ symptoms_count }} симптомов
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <!-- Информация о анализе -->
+                        <div class="alert alert-info mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong><i class="fas fa-info-circle me-2"></i>Проанализировано:</strong>
+                                    {{ symptoms_count }} симптомов
+                                </div>
+                                {% if age %}
+                                <div class="col-md-3">
+                                    <strong>Возраст:</strong> {{ age }}
+                                </div>
+                                {% endif %}
+                                {% if gender %}
+                                <div class="col-md-3">
+                                    <strong>Пол:</strong> 
+                                    {% if gender == 'male' %}Мужской{% else %}Женский{% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <h4 class="mb-4 text-center">Наиболее вероятные заболевания:</h4>
+                        
+                        <div class="row g-4">
+                            {% for result in results %}
+                            <div class="col-lg-6">
+                                <div class="disease-card card h-100 shadow-sm" 
+                                     onclick="location.href='{% url 'disease_detail' result.disease %}'">
+                                    <div class="card-body">
+                                        <!-- Заголовок с вероятностью -->
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <h5 class="card-title text-primary mb-0">
+                                                {{ result.disease }}
+                                            </h5>
+                                            <span class="badge 
+                                                {% if result.probability > 0.7 %}confidence-high
+                                                {% elif result.probability > 0.3 %}confidence-medium
+                                                {% else %}confidence-low{% endif %} fs-6">
+                                                {{ result.percentage }}
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- График вероятности -->
+                                        <div class="probability-bar">
+                                            <div class="probability-fill" 
+                                                 style="width: {{ result.probability|floatformat:3 }}%"></div>
+                                        </div>
+                                        
+                                        <!-- Описание -->
+                                        <p class="card-text text-muted small mb-3">
+                                            {{ result.description }}
+                                        </p>
+                                        
+                                        <!-- Лечение -->
+                                        <div class="border-top pt-3">
+                                            <small class="text-success">
+                                                <i class="fas fa-heartbeat me-1"></i>
+                                                <strong>Рекомендации:</strong> {{ result.treatment }}
+                                            </small>
+                                        </div>
+                                        
+                                        <!-- Кнопка подробнее -->
+                                        <div class="text-end mt-3">
+                                            <small class="text-primary">
+                                                Подробнее о заболевании 
+                                                <i class="fas fa-arrow-right ms-1"></i>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Действия -->
+                        <div class="row mt-5">
+                            <div class="col-md-6 mb-3">
+                                <button class="btn btn-outline-primary w-100 py-3" onclick="history.back()">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Вернуться и изменить симптомы
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <button class="btn btn-primary w-100 py-3" onclick="window.print()">
+                                    <i class="fas fa-print me-2"></i>
+                                    Сохранить результаты
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Важное предупреждение -->
+                <div class="alert alert-danger mt-4">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Важная информация:</h5>
+                    <ul class="mb-0">
+                        <li>Данные результаты являются предварительными и основаны на статистической модели</li>
+                        <li>Для точной диагностики и лечения обязательно обратитесь к врачу</li>
+                        <li>В экстренных случаях звоните: <strong>112, 103, 03</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

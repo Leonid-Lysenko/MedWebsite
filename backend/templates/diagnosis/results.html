@@ -7,156 +7,198 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .medical-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
         .disease-card {
             transition: all 0.3s ease;
-            cursor: pointer;
-            border: 2px solid transparent;
+            border-left: 5px solid #007bff;
+            border-radius: 15px;
         }
         .disease-card:hover {
             transform: translateY(-5px);
-            border-color: #007bff;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            border-left-color: #0056b3;
         }
-        .probability-bar {
-            height: 12px;
-            background: #e9ecef;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 10px 0;
+        .probability-indicator {
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            text-align: center;
         }
-        .probability-fill {
-            height: 100%;
-            background: linear-gradient(45deg, #28a745, #20c997);
-            border-radius: 10px;
-            transition: width 1s ease-in-out;
+        .emoji-indicator {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
         }
-        .confidence-high { color: #28a745; }
-        .confidence-medium { color: #fd7e14; }
-        .confidence-low { color: #dc3545; }
+        .btn-medical {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-medical:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body class="bg-light">
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <div class="card shadow border-0">
-                    <div class="card-header bg-primary text-white py-4">
+                <div class="medical-card p-4 p-md-5 mb-4">
+                    <!-- Заголовок -->
+                    <div class="text-center mb-5">
+                        <h1 class="display-5 fw-bold text-primary mb-3">
+                            <i class="fas fa-chart-line me-3"></i>
+                            Результаты анализа симптомов
+                        </h1>
+                        <div class="badge bg-primary text-white fs-6 px-3 py-2">
+                            <i class="fas fa-stethoscope me-2"></i>
+                            Проанализировано {{ symptoms_count }} симптомов
+                        </div>
+                    </div>
+
+                    <!-- Информация о анализе -->
+                    <div class="alert alert-info mb-4">
                         <div class="row align-items-center">
-                            <div class="col">
-                                <h2 class="mb-0">
-                                    <i class="fas fa-chart-line me-2"></i>
-                                    Результаты анализа симптомов
-                                </h2>
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-info-circle me-2"></i>Детали анализа:</strong>
+                                <div class="mt-2">
+                                    {% if age %}
+                                    <span class="badge bg-secondary me-2">Возраст: {{ age }}</span>
+                                    {% endif %}
+                                    {% if gender %}
+                                    <span class="badge bg-secondary">
+                                        Пол: {% if gender == 'male' %}Мужской{% else %}Женский{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <div class="col-auto">
-                                <span class="badge bg-light text-primary fs-6">
-                                    {{ symptoms_count }} симптомов
-                                </span>
+                            <div class="col-md-6 text-md-end">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Анализ выполнен: {% now "j E Y H:i" %}
+                                </small>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="card-body p-4">
-                        <!-- Информация о анализе -->
-                        <div class="alert alert-info mb-4">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <strong><i class="fas fa-info-circle me-2"></i>Проанализировано:</strong>
-                                    {{ symptoms_count }} симптомов
+                    <h3 class="text-center mb-4 text-primary">
+                        <i class="fas fa-disease me-2"></i>
+                        Наиболее вероятные заболевания:
+                    </h3>
+                    
+                    <!-- Улучшенная сетка результатов -->
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+                            <div class="row g-4 justify-content-center">
+                                {% for result in results %}
+                                <div class="col-lg-10 col-xl-8">
+                                    <a href="{% url 'disease_detail' result.disease %}" class="text-decoration-none">
+                                        <div class="disease-card card mb-4 shadow-sm">
+                                            <div class="card-body p-4">
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-8">
+                                                        <h4 class="card-title text-primary mb-2">
+                                                            <i class="fas fa-file-medical me-2"></i>
+                                                            {{ result.disease }}
+                                                        </h4>
+                                                        <p class="card-text text-muted mb-3">
+                                                            <small>{{ result.description }}</small>
+                                                        </p>
+                                                        <div class="d-flex align-items-center flex-wrap">
+                                                            <span class="badge bg-success me-2 mb-2">
+                                                                <i class="fas fa-heartbeat me-1"></i>
+                                                                Рекомендации
+                                                            </span>
+                                                            <small class="text-success">{{ result.treatment }}</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4 text-center">
+                                                        <div class="probability-indicator">
+                                                            <div class="emoji-indicator">
+                                                                {% if result.probability > 0.01 %}
+                                                                    🔥
+                                                                {% elif result.probability > 0.005 %}
+                                                                    ⚠️  
+                                                                {% else %}
+                                                                    💡
+                                                                {% endif %}
+                                                            </div>
+                                                            <span class="badge 
+                                                                {% if result.probability > 0.01 %}bg-success
+                                                                {% elif result.probability > 0.005 %}bg-warning text-dark
+                                                                {% else %}bg-info text-dark{% endif %} fs-6 px-3 py-2">
+                                                                {% if result.probability > 0.01 %}
+                                                                    Высокая вероятность
+                                                                {% elif result.probability > 0.005 %}
+                                                                    Средняя вероятность  
+                                                                {% else %}
+                                                                    Низкая внроятность
+                                                                {% endif %}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
                                 </div>
-                                {% if age %}
-                                <div class="col-md-3">
-                                    <strong>Возраст:</strong> {{ age }}
-                                </div>
-                                {% endif %}
-                                {% if gender %}
-                                <div class="col-md-3">
-                                    <strong>Пол:</strong> 
-                                    {% if gender == 'male' %}Мужской{% else %}Женский{% endif %}
-                                </div>
-                                {% endif %}
+                                {% endfor %}
                             </div>
                         </div>
-                        
-                        <h4 class="mb-4 text-center">Наиболее вероятные заболевания:</h4>
-                        
-                        <div class="row g-4">
-                            {% for result in results %}
-                            <div class="col-lg-6">
-                                <div class="disease-card card h-100 shadow-sm" 
-                                     onclick="location.href='{% url 'disease_detail' result.disease %}'">
-                                    <div class="card-body">
-                                        <!-- Заголовок с вероятностью -->
-                                        <div class="d-flex justify-content-between align-items-start mb-3">
-                                            <h5 class="card-title text-primary mb-0">
-                                                {{ result.disease }}
-                                            </h5>
-                                            <span class="badge 
-                                                {% if result.probability > 0.7 %}confidence-high
-                                                {% elif result.probability > 0.3 %}confidence-medium
-                                                {% else %}confidence-low{% endif %} fs-6">
-                                                {{ result.percentage }}
-                                            </span>
-                                        </div>
-                                        
-                                        <!-- График вероятности -->
-                                        <div class="probability-bar">
-                                            <div class="probability-fill" 
-                                                 style="width: {{ result.probability|floatformat:3 }}%"></div>
-                                        </div>
-                                        
-                                        <!-- Описание -->
-                                        <p class="card-text text-muted small mb-3">
-                                            {{ result.description }}
-                                        </p>
-                                        
-                                        <!-- Лечение -->
-                                        <div class="border-top pt-3">
-                                            <small class="text-success">
-                                                <i class="fas fa-heartbeat me-1"></i>
-                                                <strong>Рекомендации:</strong> {{ result.treatment }}
-                                            </small>
-                                        </div>
-                                        
-                                        <!-- Кнопка подробнее -->
-                                        <div class="text-end mt-3">
-                                            <small class="text-primary">
-                                                Подробнее о заболевании 
-                                                <i class="fas fa-arrow-right ms-1"></i>
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
+                    </div>
 
-                        <!-- Действия -->
-                        <div class="row mt-5">
-                            <div class="col-md-6 mb-3">
-                                <button class="btn btn-outline-primary w-100 py-3" onclick="history.back()">
-                                    <i class="fas fa-arrow-left me-2"></i>
-                                    Вернуться и изменить симптомы
-                                </button>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <button class="btn btn-primary w-100 py-3" onclick="window.print()">
-                                    <i class="fas fa-print me-2"></i>
-                                    Сохранить результаты
-                                </button>
-                            </div>
+                    <!-- Действия -->
+                    <div class="row mt-5">
+                        <div class="col-md-6 mb-3">
+                            <a href="{% url 'home' %}" class="btn btn-outline-primary w-100 py-3">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Вернуться и изменить симптомы
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <button class="btn btn-medical text-white w-100 py-3" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i>
+                                Сохранить результаты
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Важное предупреждение -->
-                <div class="alert alert-danger mt-4">
+                <div class="alert alert-danger text-center">
                     <h5><i class="fas fa-exclamation-triangle me-2"></i>Важная информация:</h5>
-                    <ul class="mb-0">
-                        <li>Данные результаты являются предварительными и основаны на статистической модели</li>
-                        <li>Для точной диагностики и лечения обязательно обратитесь к врачу</li>
-                        <li>В экстренных случаях звоните: <strong>112, 103, 03</strong></li>
-                    </ul>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <i class="fas fa-user-md me-2"></i>
+                            <strong>Консультация врача обязательна</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Предварительный диагноз</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-phone me-2"></i>
+                            <strong>Экстренно: 112, 103</strong>
+                        </div>
+                    </div>
+                    <p class="mt-3 mb-0">
+                        Данная система является помощником для предварительной диагностики. 
+                        Для точного диагноза и лечения обязательно обратитесь к врачу!
+                    </p>
                 </div>
             </div>
         </div>

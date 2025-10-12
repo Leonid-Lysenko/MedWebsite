@@ -81,6 +81,45 @@
     </style>
 </head>
 <body>
+    <!-- Навигационное меню -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(10px);">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+                <i class="fas fa-stethoscope me-2"></i>
+                Медицинский Помощник
+            </a>
+            
+            <!-- Кнопка для мобильных -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Меню -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1"></i>Главная
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about' %}">
+                            <i class="fas fa-info-circle me-1"></i>О нас
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-phone me-1"></i>Контакты
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Добавил отступ для фиксированной навигации -->
+    <div style="padding-top: 80px;"></div>
+
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
@@ -178,7 +217,7 @@
                                     <strong>Выбранные симптомы:</strong>
                                     <span id="selectedSymptomsList"></span>
                                 </div>
-                                <button class="btn btn-sm btn-outline-success" id="clearAllSymptoms">
+                                <button class="btn btn-sm btn-outline-success" id="clearAllSymptoms" type="button">
                                     <i class="fas fa-times me-1"></i>Очистить все
                                 </button>
                             </div>
@@ -271,6 +310,12 @@
             
             // Показываем счетчик
             updateSearchResultsCount(allSymptoms.length);
+            
+            // Инициализируем выбранные симптомы
+            document.querySelectorAll('input[name="symptoms"]:checked').forEach(checkbox => {
+                selectedSymptoms.add(checkbox.value);
+            });
+            updateSelectedCount();
         }
 
         function setupEventListeners() {
@@ -293,17 +338,11 @@
                 checkbox.addEventListener('change', function() {
                     handleSymptomSelection(this);
                 });
-                
-                // Инициализация уже выбранных симптомов
-                if (checkbox.checked) {
-                    selectedSymptoms.add(checkbox.value);
-                }
             });
         }
 
         function performSearch(searchTerm) {
             if (searchTerm === '') {
-                // Показываем все симптомы в исходном порядке
                 showAllSymptoms();
                 return;
             }
@@ -311,53 +350,42 @@
             let foundCount = 0;
             const searchResults = [];
 
-            // Ищем и ранжируем симптомы
             allSymptoms.forEach(symptom => {
                 const element = symptom.element;
                 const label = element.querySelector('label');
                 const originalText = label.dataset.original;
                 
-                // Проверяем совпадение
                 const index = symptom.text.indexOf(searchTerm);
                 const isMatch = index !== -1;
                 
                 if (isMatch) {
                     foundCount++;
                     
-                    // Подсвечиваем совпадение
                     const highlightedText = originalText.replace(
                         new RegExp(searchTerm, 'gi'),
                         match => `<span class="highlight">${match}</span>`
                     );
                     label.innerHTML = highlightedText;
                     
-                    // Ранжируем по позиции совпадения (чем раньше, тем выше)
                     const rank = index;
                     searchResults.push({ element, rank, originalText });
                     
                     element.style.display = 'block';
                 } else {
                     element.style.display = 'none';
-                    label.innerHTML = originalText; // Восстанавливаем оригинальный текст
+                    label.innerHTML = originalText;
                 }
             });
 
-            // Сортируем результаты по релевантности
             searchResults.sort((a, b) => a.rank - b.rank);
             
-            // Переставляем элементы в DOM
             const symptomsGrid = document.getElementById('symptoms-grid');
             searchResults.forEach(result => {
                 symptomsGrid.appendChild(result.element);
             });
 
-            // Показываем/скрываем сообщение "не найдено"
             const noResultsMessage = document.getElementById('noResultsMessage');
-            if (foundCount === 0) {
-                noResultsMessage.style.display = 'block';
-            } else {
-                noResultsMessage.style.display = 'none';
-            }
+            noResultsMessage.style.display = foundCount === 0 ? 'block' : 'none';
 
             updateSearchResultsCount(foundCount);
         }
@@ -365,7 +393,6 @@
         function showAllSymptoms() {
             allSymptoms.forEach(symptom => {
                 symptom.element.style.display = 'block';
-                // Восстанавливаем оригинальный текст
                 const label = symptom.element.querySelector('label');
                 label.innerHTML = label.dataset.original;
             });
@@ -388,48 +415,59 @@
             }
             
             updateSelectedCount();
-            updateSelectedSymptomsBanner();
         }
 
         function updateSelectedCount() {
             const count = selectedSymptoms.size;
-            document.getElementById('selectedCount').textContent = count;
-            document.getElementById('selectedCountBadge').innerHTML = `Выбрано: <strong>${count}</strong>`;
+            
+            // Обновляем счетчик в баннере
+            const selectedCountElement = document.getElementById('selectedCount');
+            if (selectedCountElement) {
+                selectedCountElement.textContent = count;
+            }
+            
+            // Обновляем счетчик в строке поиска
+            const selectedCountBadge = document.getElementById('selectedCountBadge');
+            if (selectedCountBadge) {
+                selectedCountBadge.innerHTML = `Выбрано: <strong>${count}</strong>`;
+            }
+            
+            // Обновляем баннер выбранных симптомов
+            updateSelectedSymptomsBanner();
         }
 
         function updateSearchResultsCount(found) {
-            document.getElementById('foundCount').textContent = found;
+            const foundCountElement = document.getElementById('foundCount');
+            if (foundCountElement) {
+                foundCountElement.textContent = found;
+            }
         }
 
         function updateSelectedSymptomsBanner() {
             const banner = document.getElementById('selectedSymptomsBanner');
             const symptomsList = document.getElementById('selectedSymptomsList');
             
-            if (selectedSymptoms.size > 0) {
-                symptomsList.textContent = Array.from(selectedSymptoms).join(', ');
-                banner.style.display = 'block';
-            } else {
-                banner.style.display = 'none';
+            if (banner && symptomsList) {
+                if (selectedSymptoms.size > 0) {
+                    symptomsList.textContent = Array.from(selectedSymptoms).join(', ');
+                    banner.style.display = 'block';
+                } else {
+                    banner.style.display = 'none';
+                }
             }
         }
 
         function clearAllSymptoms() {
-            // Снимаем выделение со всех чекбоксов
             document.querySelectorAll('input[name="symptoms"]:checked').forEach(checkbox => {
                 checkbox.checked = false;
                 checkbox.parentElement.style.backgroundColor = '';
                 checkbox.parentElement.style.borderColor = '';
             });
             
-            // Очищаем множество выбранных симптомов
             selectedSymptoms.clear();
-            
-            // Обновляем интерфейс
             updateSelectedCount();
-            updateSelectedSymptomsBanner();
         }
 
-        // Анимация появления симптомов
         function animateSymptoms() {
             const symptoms = document.querySelectorAll('.symptom-item');
             symptoms.forEach((symptom, index) => {

@@ -54,10 +54,43 @@
     </style>
 </head>
 <body class="bg-light">
+    <!-- Навигационное меню -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(10px);">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+                <i class="fas fa-stethoscope me-2"></i>
+                Медицинский Помощник
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="fas fa-home me-1"></i>Главная
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'about' %}">
+                            <i class="fas fa-info-circle me-1"></i>О нас
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'how_to_use' %}">
+                            <i class="fas fa-question-circle me-1"></i>Как пользоваться
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <div class="medical-card p-4 p-md-5 mb-4">
+                <div class="medical-card p-4 p-md-5 mb-4 mt-5">
                     <!-- Заголовок -->
                     <div class="text-center mb-5">
                         <h1 class="display-5 fw-bold text-primary mb-3">
@@ -75,16 +108,6 @@
                         <div class="row align-items-center">
                             <div class="col-md-6">
                                 <strong><i class="fas fa-info-circle me-2"></i>Детали анализа:</strong>
-                                <div class="mt-2">
-                                    {% if age %}
-                                    <span class="badge bg-secondary me-2">Возраст: {{ age }}</span>
-                                    {% endif %}
-                                    {% if gender %}
-                                    <span class="badge bg-secondary">
-                                        Пол: {% if gender == 'male' %}Мужской{% else %}Женский{% endif %}
-                                    </span>
-                                    {% endif %}
-                                </div>
                             </div>
                             <div class="col-md-6 text-md-end">
                                 <small class="text-muted">
@@ -129,24 +152,24 @@
                                                     <div class="col-md-4 text-center">
                                                         <div class="probability-indicator">
                                                             <div class="emoji-indicator">
-                                                                {% if result.probability > 0.01 %}
+                                                                {% if result.probability > 0.1 %}
                                                                     🔥
-                                                                {% elif result.probability > 0.005 %}
+                                                                {% elif result.probability > 0.05 %}
                                                                     ⚠️  
                                                                 {% else %}
                                                                     💡
                                                                 {% endif %}
                                                             </div>
                                                             <span class="badge 
-                                                                {% if result.probability > 0.01 %}bg-success
-                                                                {% elif result.probability > 0.005 %}bg-warning text-dark
+                                                                {% if result.probability > 0.1 %}bg-success
+                                                                {% elif result.probability > 0.05 %}bg-warning text-dark
                                                                 {% else %}bg-info text-dark{% endif %} fs-6 px-3 py-2">
-                                                                {% if result.probability > 0.01 %}
+                                                                {% if result.probability > 0.1 %}
                                                                     Высокая вероятность
-                                                                {% elif result.probability > 0.005 %}
+                                                                {% elif result.probability > 0.05 %}
                                                                     Средняя вероятность  
                                                                 {% else %}
-                                                                    Низкая внроятность
+                                                                    Низкая вероятность
                                                                 {% endif %}
                                                             </span>
                                                         </div>

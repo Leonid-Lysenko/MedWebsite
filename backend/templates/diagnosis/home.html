@@ -112,6 +112,11 @@
                             <i class="fas fa-phone me-1"></i>Контакты
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'how_to_use' %}">
+                            <i class="fas fa-question-circle me-1"></i>Как пользоваться
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -158,27 +163,6 @@
                 <div class="medical-card p-4 p-md-5 mb-4">
                     <form method="POST" action="{% url 'predict' %}">
                         {% csrf_token %}
-                        
-                        <!-- Основная информация -->
-                        <div class="row mb-4">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-primary">
-                                    <i class="fas fa-user me-2"></i>Возраст
-                                </label>
-                                <input type="number" name="age" class="form-control form-control-lg" 
-                                       placeholder="Введите возраст" min="1" max="120">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-primary">
-                                    <i class="fas fa-venus-mars me-2"></i>Пол
-                                </label>
-                                <select name="gender" class="form-select form-select-lg">
-                                    <option value="">Выберите пол</option>
-                                    <option value="male">Мужской</option>
-                                    <option value="female">Женский</option>
-                                </select>
-                            </div>
-                        </div>
 
                         <!-- Улучшенный поиск симптомов -->
                         <div class="mb-4">
@@ -229,6 +213,17 @@
                                 <i class="fas fa-notes-medical me-2"></i>
                                 Выберите симптомы (отметьте все подходящие):
                             </label>
+
+                            <!-- Верхняя кнопка -->
+                            <div class="text-center mb-4" id="topAnalyzeBtn" style="display: none;">
+                                <button type="submit" class="btn btn-medical text-white px-4 py-3 fs-6">
+                                    <i class="fas fa-search me-2"></i>
+                                    Анализировать выбранные симптомы (<span class="symptom-count">0</span>)
+                                </button>
+                                <div class="mt-2">
+                                    <small class="text-muted">или продолжите выбор симптомов ниже</small>
+                                </div>
+                            </div>
                             
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
@@ -265,16 +260,16 @@
                             </div>
                         </div>
                         
-                        <!-- Кнопка анализа -->
+                        <!-- Нижняя кнопка -->
                         <div class="text-center mt-5">
                             <button type="submit" class="btn btn-medical text-white px-5 py-3 fs-5">
                                 <i class="fas fa-search me-2"></i>
-                                Проанализировать Симптомы
+                                Анализировать выбранные симптомы (<span class="symptom-count">0</span>)
                             </button>
                         </div>
                     </form>
                 </div>
-                
+
                 <!-- Предупреждение -->
                 <div class="alert alert-warning text-center">
                     <i class="fas fa-exclamation-triangle me-2"></i>
@@ -420,6 +415,12 @@
         function updateSelectedCount() {
             const count = selectedSymptoms.size;
             
+            // Обновляем ВСЕ элементы с классом symptom-count
+            const symptomCountElements = document.querySelectorAll('.symptom-count');
+            symptomCountElements.forEach(element => {
+                element.textContent = count;
+            });
+            
             // Обновляем счетчик в баннере
             const selectedCountElement = document.getElementById('selectedCount');
             if (selectedCountElement) {
@@ -430,6 +431,16 @@
             const selectedCountBadge = document.getElementById('selectedCountBadge');
             if (selectedCountBadge) {
                 selectedCountBadge.innerHTML = `Выбрано: <strong>${count}</strong>`;
+            }
+            
+            // Показываем/скрываем верхнюю кнопку
+            const topBtn = document.getElementById('topAnalyzeBtn');
+            if (topBtn) {
+                if (count > 0) {
+                    topBtn.style.display = 'block';
+                } else {
+                    topBtn.style.display = 'none';
+                }
             }
             
             // Обновляем баннер выбранных симптомов

@@ -61,11 +61,8 @@ def predict(request):
         try:
             # Получаем симптомы из формы
             selected_symptoms = request.POST.getlist('symptoms')
-            age = request.POST.get('age', '')
-            gender = request.POST.get('gender', '')
             
             print(f"Получены симптомы: {selected_symptoms}")
-            print(f"Возраст: {age}, Пол: {gender}")
             
             # Создаем вектор для модели
             input_vector = np.zeros(len(symptoms_list))
@@ -115,9 +112,7 @@ def predict(request):
             
             return render(request, 'diagnosis/results.html', {
                 'results': results,
-                'symptoms_count': len(selected_symptoms),
-                'age': age,
-                'gender': gender
+                'symptoms_count': len(selected_symptoms)
             })
             
         except Exception as e:
@@ -135,7 +130,11 @@ def about(request):
     """Страница 'О нас'"""
     return render(request, 'diagnosis/about.html')
 
-# временная описательная информация (скоро придумаем что-то получше !)
+def how_to_use(request):
+    """Страница с инструкцией по использованию"""
+    return render(request, 'diagnosis/how_to_use.html')
+
+# описательная информация 
 
 from .disease_data import get_disease_info
 

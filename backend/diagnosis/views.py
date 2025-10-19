@@ -112,7 +112,8 @@ def predict(request):
             
             return render(request, 'diagnosis/results.html', {
                 'results': results,
-                'symptoms_count': len(selected_symptoms)
+                'symptoms_count': len(selected_symptoms),
+                'selected_symptoms': selected_symptoms
             })
             
         except Exception as e:
@@ -153,6 +154,16 @@ def get_disease_treatment(disease_name):
 def disease_detail(request, disease_name):
     """Детальная страница болезни"""
     disease_info = get_disease_info(disease_name)
+
+        # Проверяем, нашли ли мы заболевание в базе знаний
+    is_unknown_disease = disease_info["description"].startswith("Информация о заболевании")
+    
+    if is_unknown_disease:
+        # Если заболевание не найдено, показываем красивую страницу "Не найдено"
+        return render(request, 'diagnosis/disease_not_found.html', {
+            'searched_disease': disease_name,
+            'suggestions': get_disease_suggestions(disease_name)  # Функция для подсказок
+        })
     
     return render(request, 'diagnosis/disease_detail.html', {
         'disease_name': disease_name,
@@ -164,3 +175,14 @@ def disease_detail(request, disease_name):
         'category': disease_info["category"],
         'emergency_contacts': ['112 - Единая служба спасения', '103 - Скорая помощь', '03 - Скорая помощь (старый номер)']
     })
+
+def get_disease_suggestions(searched_name):
+    """Возвращает похожие заболевания для подсказок"""
+    from difflib import get_close_matches
+    
+    # Все заболевания из модели
+    all_diseases = model.classes_.tolist() if model else []
+    
+    # Ищем похожие названия
+    suggestions = get_close_matches(searched_name, all_diseases, n=5, cutoff=0.3)
+    return suggestions

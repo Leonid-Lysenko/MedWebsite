@@ -1,139 +1,126 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Результаты диагностики</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .medical-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .disease-card {
-            transition: all 0.3s ease;
-            border-left: 5px solid #007bff;
-            border-radius: 15px;
-        }
-        .disease-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-            border-left-color: #0056b3;
-        }
-        .probability-indicator {
-            padding: 20px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            text-align: center;
-        }
-        .emoji-indicator {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        .btn-medical {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 50px;
-            padding: 12px 30px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-medical:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-    </style>
-</head>
-<body class="bg-light">
-    <!-- Навигационное меню -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(10px);">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
-                <i class="fas fa-stethoscope me-2"></i>
-                Медицинский Помощник
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">
-                            <i class="fas fa-home me-1"></i>Главная
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'about' %}">
-                            <i class="fas fa-info-circle me-1"></i>О нас
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'how_to_use' %}">
-                            <i class="fas fa-question-circle me-1"></i>Как пользоваться
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="medical-card p-4 p-md-5 mb-4 mt-5">
-                    <!-- Заголовок -->
-                    <div class="text-center mb-5">
-                        <h1 class="display-5 fw-bold text-primary mb-3">
-                            <i class="fas fa-chart-line me-3"></i>
-                            Результаты анализа симптомов
-                        </h1>
-                        <div class="badge bg-primary text-white fs-6 px-3 py-2">
-                            <i class="fas fa-stethoscope me-2"></i>
-                            Проанализировано {{ symptoms_count }} симптомов
-                        </div>
-                    </div>
+{% extends 'diagnosis/base.html' %}
+{% load static %}
 
-                    <!-- Информация о анализе -->
-                    <div class="alert alert-info mb-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <strong><i class="fas fa-info-circle me-2"></i>Детали анализа:</strong>
-                            </div>
-                            <div class="col-md-6 text-md-end">
-                                <small class="text-muted">
-                                    <i class="fas fa-clock me-1"></i>
-                                    Анализ выполнен: {% now "j E Y H:i" %}
+{% block title %}Результаты диагностики - Медицинский помощник{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Основные стили для страницы результатов */
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .medical-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Стили для карточек заболеваний */
+    .disease-card {
+        transition: all 0.3s ease;
+        border-left: 5px solid #007bff;
+        border-radius: 15px;
+    }
+    
+    .disease-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        border-left-color: #0056b3;
+    }
+    
+    /* Стили для индикаторов вероятности */
+    .probability-indicator {
+        padding: 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        text-align: center;
+    }
+    
+    .emoji-indicator {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    
+    /* Стили для кнопок */
+    .btn-medical {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 50px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-medical:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Основная карточка с результатами -->
+            <div class="medical-card p-4 p-md-5 mb-4">
+                <!-- Заголовок страницы -->
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-primary mb-3">
+                        <i class="fas fa-chart-line me-3"></i>
+                        Результаты анализа симптомов
+                    </h1>
+                    <div class="badge bg-primary text-white fs-6 px-3 py-2">
+                        <i class="fas fa-stethoscope me-2"></i>
+                        Проанализировано {{ symptoms_count }} симптомов
+                    </div>
+                </div>
+
+                <!-- Информационная панель с деталями анализа -->
+                <div class="alert alert-info mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-info-circle me-2"></i>Детали анализа:</strong>
+                            <div class="mt-1">
+                                <small>
+                                    <strong>Симптомы:</strong> {{ selected_symptoms|join:", " }}
                                 </small>
                             </div>
                         </div>
+                        <div class="col-md-6 text-md-end">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Анализ выполнен: {% now "j E Y H:i" %}
+                            </small>
+                        </div>
                     </div>
-                    
-                    <h3 class="text-center mb-4 text-primary">
-                        <i class="fas fa-disease me-2"></i>
-                        Наиболее вероятные заболевания:
-                    </h3>
-                    
-                    <!-- Улучшенная сетка результатов -->
-                    <div class="row justify-content-center">
-                        <div class="col-12">
-                            <div class="row g-4 justify-content-center">
-                                {% for result in results %}
-                                <div class="col-lg-10 col-xl-8">
-                                    <a href="{% url 'disease_detail' result.disease %}" class="text-decoration-none">
+                </div>
+
+                <!-- Заголовок списка заболеваний -->
+                <h3 class="text-center mb-4 text-primary">
+                    <i class="fas fa-disease me-2"></i>
+                    Наиболее вероятные заболевания:
+                </h3>
+
+                <!-- Сетка с результатами диагностики -->
+                <div class="row justify-content-center">
+                    <div class="col-12">
+                        <div class="row g-4 justify-content-center">
+                            {% for result in results %}
+                                <div class="col-12 col-lg-10 col-xl-8">
+                                    <!-- Карточка заболевания -->
+                                    <a href="{% url 'disease_detail' result.disease %}"
+                                       class="text-decoration-none">
                                         <div class="disease-card card mb-4 shadow-sm">
-                                            <div class="card-body p-4">
+                                            <div class="card-body p-3 p-md-4">
                                                 <div class="row align-items-center">
-                                                    <div class="col-md-8">
+                                                    <!-- Левая часть - информация о заболевании -->
+                                                    <div class="col-12 col-md-8 text-center text-md-start">
                                                         <h4 class="card-title text-primary mb-2">
                                                             <i class="fas fa-file-medical me-2"></i>
                                                             {{ result.disease }}
@@ -141,35 +128,41 @@
                                                         <p class="card-text text-muted mb-3">
                                                             <small>{{ result.description }}</small>
                                                         </p>
-                                                        <div class="d-flex align-items-center flex-wrap">
-                                                            <span class="badge bg-success me-2 mb-2">
+                                                        <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start flex-wrap">
+                                                            <span class="badge bg-success me-0 me-md-2 mb-2">
                                                                 <i class="fas fa-heartbeat me-1"></i>
                                                                 Рекомендации
                                                             </span>
-                                                            <small class="text-success">{{ result.treatment }}</small>
+                                                            <small class="text-success text-center text-md-start">
+                                                                {{ result.treatment }}
+                                                            </small>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-4 text-center">
+                                                    
+                                                    <!-- Правая часть - индикатор вероятности -->
+                                                    <div class="col-12 col-md-4 text-center mt-3 mt-md-0">
                                                         <div class="probability-indicator">
+                                                            <!-- Эмодзи-индикатор в зависимости от вероятности -->
                                                             <div class="emoji-indicator">
                                                                 {% if result.probability > 0.1 %}
                                                                     🔥
                                                                 {% elif result.probability > 0.05 %}
-                                                                    ⚠️  
+                                                                    ⚠️
                                                                 {% else %}
                                                                     💡
                                                                 {% endif %}
                                                             </div>
-                                                            <span class="badge 
+                                                            <!-- Текстовый индикатор вероятности -->
+                                                            <span class="probability-badge 
                                                                 {% if result.probability > 0.1 %}bg-success
                                                                 {% elif result.probability > 0.05 %}bg-warning text-dark
-                                                                {% else %}bg-info text-dark{% endif %} fs-6 px-3 py-2">
+                                                                {% else %}bg-info text-dark{% endif %}">
                                                                 {% if result.probability > 0.1 %}
-                                                                    Высокая вероятность
+                                                                    Высокая
                                                                 {% elif result.probability > 0.05 %}
-                                                                    Средняя вероятность  
+                                                                    Средняя
                                                                 {% else %}
-                                                                    Низкая вероятность
+                                                                    Низкая
                                                                 {% endif %}
                                                             </span>
                                                         </div>
@@ -179,54 +172,56 @@
                                         </div>
                                     </a>
                                 </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Действия -->
-                    <div class="row mt-5">
-                        <div class="col-md-6 mb-3">
-                            <a href="{% url 'home' %}" class="btn btn-outline-primary w-100 py-3">
-                                <i class="fas fa-arrow-left me-2"></i>
-                                Вернуться и изменить симптомы
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <button class="btn btn-medical text-white w-100 py-3" onclick="window.print()">
-                                <i class="fas fa-print me-2"></i>
-                                Сохранить результаты
-                            </button>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Важное предупреждение -->
-                <div class="alert alert-danger text-center">
-                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Важная информация:</h5>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <i class="fas fa-user-md me-2"></i>
-                            <strong>Консультация врача обязательна</strong>
-                        </div>
-                        <div class="col-md-4">
-                            <i class="fas fa-clock me-2"></i>
-                            <strong>Предварительный диагноз</strong>
-                        </div>
-                        <div class="col-md-4">
-                            <i class="fas fa-phone me-2"></i>
-                            <strong>Экстренно: 112, 103</strong>
-                        </div>
+                <!-- Блок действий с результатами -->
+                <div class="row mt-5">
+                    <div class="col-md-6 mb-3">
+                        <!-- Кнопка возврата к форме ввода симптомов -->
+                        <a href="{% url 'home' %}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Вернуться и изменить симптомы
+                        </a>
                     </div>
-                    <p class="mt-3 mb-0">
-                        Данная система является помощником для предварительной диагностики. 
-                        Для точного диагноза и лечения обязательно обратитесь к врачу!
-                    </p>
+                    <div class="col-md-6 mb-3">
+                        <!-- Кнопка сохранения/печати результатов -->
+                        <button class="btn btn-medical text-white w-100 py-3"
+                                onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>
+                            Сохранить результаты
+                        </button>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Важное предупреждение для пользователей -->
+            <div class="alert alert-danger text-center">
+                <h5>
+                    <i class="fas fa-exclamation-triangle me-2"></i>Важная информация:
+                </h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <i class="fas fa-user-md me-2"></i>
+                        <strong>Консультация врача обязательна</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="fas fa-clock me-2"></i>
+                        <strong>Предварительный диагноз</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="fas fa-phone me-2"></i>
+                        <strong>Экстренно: 112, 103</strong>
+                    </div>
+                </div>
+                <p class="mt-3 mb-0">
+                    Данная система является помощником для предварительной диагностики.
+                    Для точного диагноза и лечения обязательно обратитесь к врачу!
+                </p>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
+{% endblock %}

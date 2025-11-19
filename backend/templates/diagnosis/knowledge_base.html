@@ -1,0 +1,324 @@
+{% extends 'diagnosis/base.html' %}
+{% load static %}
+
+{% block title %}База знаний - Медицинский помощник{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Стили для алфавитной навигации */
+    .alphabet-nav {
+        position: sticky;
+        top: 80px;
+        z-index: 100;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+    }
+    
+    .disease-letter-section {
+        scroll-margin-top: 120px;
+    }
+    
+    /* Стили для карточек заболеваний */
+    .disease-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #007bff;
+    }
+    
+    .disease-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Стили для бейджей серьезности */
+    .badge {
+        font-size: 0.75em;
+        padding: 0.4em 0.6em;
+        cursor: help;
+    }
+    
+    .severity-high { 
+        background: linear-gradient(135deg, #dc3545, #c82333) !important; 
+    }
+    
+    .severity-medium { 
+        background: linear-gradient(135deg, #fd7e14, #ffc107) !important; 
+        color: black !important; 
+    }
+    
+    .severity-low { 
+        background: linear-gradient(135deg, #28a745, #20c997) !important; 
+    }
+    
+    .severity-variable { 
+        background: linear-gradient(135deg, #6c757d, #495057) !important; 
+    }
+    
+    .severity-unknown { 
+        background: linear-gradient(135deg, #e9ecef, #dee2e6) !important; 
+        color: black !important; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Основная карточка базы знаний -->
+            <div class="medical-card p-4 p-md-5 mb-4">
+                <!-- Заголовок страницы -->
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-primary mb-3">
+                        <i class="fas fa-book-medical me-3"></i>
+                        База знаний заболеваний
+                    </h1>
+                    <p class="lead text-muted">Полная информация о {{ total_diseases }} заболеваниях</p>
+                </div>
+
+                <!-- Блок поиска заболеваний -->
+                <div class="mb-5">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-primary text-white">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text"
+                               id="diseaseSearch"
+                               class="form-control"
+                               placeholder="Поиск заболевания...">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                            <i class="fas fa-times"></i> Очистить
+                        </button>
+                    </div>
+                    <div class="mt-2 text-center">
+                        <small class="text-muted" id="searchResultsCount">
+                            Найдено: <span id="foundCount">{{ total_diseases }}</span> из {{ total_diseases }} заболеваний
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Алфавитная навигация -->
+                <div class="alphabet-nav p-3 mb-4 rounded shadow-sm">
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        {% for letter in diseases_by_letter.keys %}
+                            <a href="#letter-{{ letter }}" class="btn btn-sm btn-outline-primary">{{ letter }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Легенда бейджей серьезности -->
+                <div class="alert alert-light mb-4">
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>Обозначения серьезности:
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge severity-high"
+                              data-bs-toggle="tooltip"
+                              title="Высокий риск, требуется срочная медицинская помощь">ВЫСОКАЯ</span>
+                        <span class="badge severity-medium"
+                              data-bs-toggle="tooltip"
+                              title="Средний риск, рекомендуется консультация врача">СРЕДНЯЯ</span>
+                        <span class="badge severity-low"
+                              data-bs-toggle="tooltip"
+                              title="Низкий риск, плановый осмотр">НИЗКАЯ</span>
+                        <span class="badge severity-variable"
+                              data-bs-toggle="tooltip"
+                              title="Серьезность зависит от стадии и формы заболевания">ЗАВИСИТ ОТ СТАДИИ</span>
+                        <span class="badge severity-unknown"
+                              data-bs-toggle="tooltip"
+                              title="Серьезность заболевания требует индивидуальной оценки">НЕОПРЕДЕЛЕНА</span>
+                    </div>
+                </div>
+
+                <!-- Список заболеваний по алфавиту -->
+                <div id="diseasesList">
+                    {% for letter, diseases in diseases_by_letter.items %}
+                        <!-- Секция для каждой буквы алфавита -->
+                        <div class="disease-letter-section mb-5" id="letter-{{ letter }}">
+                            <h2 class="text-primary mb-4 border-bottom pb-2">
+                                <i class="fas fa-file-medical me-2"></i>
+                                {{ letter }}
+                                <span class="badge bg-secondary ms-2"
+                                      data-bs-toggle="tooltip"
+                                      title="Количество заболеваний на букву '{{ letter }}': {{ diseases|length }}">
+                                    {{ diseases|length }}
+                                </span>
+                            </h2>
+                            
+                            <!-- Сетка заболеваний для текущей буквы -->
+                            <div class="row g-3">
+                                {% for disease_obj in diseases %}
+                                    <div class="col-md-6 col-lg-4 disease-item">
+                                        <a href="{% url 'disease_detail_kb' disease_obj.name %}"
+                                           class="text-decoration-none">
+                                            <div class="disease-card card h-100 shadow-sm">
+                                                <div class="card-body">
+                                                    <!-- Название заболевания -->
+                                                    <h5 class="card-title text-primary">
+                                                        <i class="fas fa-disease me-2"></i>
+                                                        {{ disease_obj.name }}
+                                                    </h5>
+                                                    
+                                                    <!-- Краткое описание -->
+                                                    <p class="card-text text-muted small">
+                                                        {{ disease_obj.info.description|truncatewords:15 }}
+                                                    </p>
+                                                    
+                                                    <!-- Бейджи серьезности и категории -->
+                                                    <div class="mt-2">
+                                                        <!-- Бейдж серьезности -->
+                                                        <span class="badge severity-{{ disease_obj.info.severity|default:'unknown' }}"
+                                                              data-bs-toggle="tooltip"
+                                                              title="{% if disease_obj.info.severity == 'high' %}Высокий риск, требуется срочная медицинская помощь{% elif disease_obj.info.severity == 'medium' %}Средний риск, рекомендуется консультация врача{% elif disease_obj.info.severity == 'low' %}Низкий риск, плановый осмотр{% elif disease_obj.info.severity == 'variable' %}Серьезность зависит от стадии и формы заболевания{% else %}Серьезность заболевания требует индивидуальной оценки{% endif %}">
+                                                            {% if disease_obj.info.severity == 'high' %}
+                                                                ВЫСОКАЯ
+                                                            {% elif disease_obj.info.severity == 'medium' %}
+                                                                СРЕДНЯЯ
+                                                            {% elif disease_obj.info.severity == 'low' %}
+                                                                НИЗКАЯ
+                                                            {% elif disease_obj.info.severity == 'variable' %}
+                                                                ЗАВИСИТ ОТ СТАДИИ
+                                                            {% else %}
+                                                                НЕОПРЕДЕЛЕНА
+                                                            {% endif %}
+                                                        </span>
+                                                        
+                                                        <!-- Бейдж категории -->
+                                                        <span class="badge bg-info ms-1 text-white"
+                                                              data-bs-toggle="tooltip"
+                                                              title="Категория заболевания: {{ disease_obj.info.category|default:'Не указана' }}">
+                                                            {{ disease_obj.info.category|default:"БЕЗ КАТЕГОРИИ" }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Кнопка "Наверх" -->
+                <div class="text-center mt-5">
+                    <a href="#" class="btn btn-outline-primary" id="backToTop">
+                        <i class="fas fa-arrow-up me-2"></i>Наверх
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Инициализация после загрузки DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация подсказок Bootstrap
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Получение DOM-элементов
+        const diseaseSearch = document.getElementById('diseaseSearch');
+        const clearSearch = document.getElementById('clearSearch');
+        const foundCount = document.getElementById('foundCount');
+        const diseaseItems = document.querySelectorAll('.disease-item');
+        const alphabetLinks = document.querySelectorAll('.alphabet-nav a');
+        const backToTop = document.getElementById('backToTop');
+
+        // Функция для поиска заболеваний
+        if (diseaseSearch) {
+            diseaseSearch.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                // Фильтрация заболеваний по поисковому запросу
+                diseaseItems.forEach(item => {
+                    const diseaseName = item.querySelector('.card-title').textContent.toLowerCase();
+                    if (searchTerm === '' || diseaseName.includes(searchTerm)) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Обновление счетчика найденных результатов
+                if (foundCount) {
+                    foundCount.textContent = visibleCount;
+                }
+            });
+        }
+        
+        // Функция для очистки поиска
+        if (clearSearch) {
+            clearSearch.addEventListener('click', function() {
+                if (diseaseSearch) {
+                    diseaseSearch.value = '';
+                }
+                
+                // Показать все заболевания
+                diseaseItems.forEach(item => {
+                    item.style.display = 'block';
+                });
+                
+                // Сброс счетчика
+                if (foundCount) {
+                    foundCount.textContent = diseaseItems.length;
+                }
+            });
+        }
+
+        // Плавная прокрутка для алфавитной навигации
+        alphabetLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Функция кнопки "Наверх"
+        if (backToTop) {
+            backToTop.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+
+        // Подсветка найденного текста при поиске
+        if (diseaseSearch) {
+            diseaseSearch.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                const diseaseTitles = document.querySelectorAll('.card-title');
+                
+                diseaseTitles.forEach(title => {
+                    const originalText = title.textContent;
+                    if (searchTerm && originalText.toLowerCase().includes(searchTerm)) {
+                        const regex = new RegExp(searchTerm, 'gi');
+                        const highlightedText = originalText.replace(
+                            regex,
+                            match => `<mark class="bg-warning">${match}</mark>`
+                        );
+                        title.innerHTML = highlightedText;
+                    } else {
+                        title.textContent = originalText;
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

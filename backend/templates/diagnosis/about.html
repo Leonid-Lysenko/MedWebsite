@@ -1,226 +1,199 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>О нас - Медицинский диагностический помощник</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* Анимированный градиентный фон */
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .animated-bg {
-            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            min-height: 100vh;
-        }
-        
-        .medical-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .feature-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 2rem;
-            color: white;
-        }
-        
-        .nav-link {
-            transition: all 0.3s ease;
-        }
-        
-        .nav-link:hover {
-            transform: translateY(-2px);
-        }
-    </style>
-</head>
-<body>
-    <!-- Навигационное меню -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(10px);">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
-                <i class="fas fa-stethoscope me-2"></i>
-                Медицинский Помощник
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">
-                            <i class="fas fa-home me-1"></i>Главная
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'about' %}">
-                            <i class="fas fa-info-circle me-1"></i>О нас
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'how_to_use' %}">
-                            <i class="fas fa-question-circle me-1"></i>Как пользоваться
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends 'diagnosis/base.html' %}
+{% load static %}
 
-    <!-- Анимированный фон -->
-    <div class="animated-bg">
-        <div class="container py-5">
-            <div style="padding-top: 80px;"></div>
-            
-            <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="medical-card p-4 p-md-5 mb-4">
-                        <!-- Заголовок -->
-                        <div class="text-center mb-5">
-                            <h1 class="display-4 fw-bold text-primary mb-3">
-                                <i class="fas fa-heartbeat me-3"></i>
-                                О нашем проекте
-                            </h1>
-                            <p class="lead text-muted">Инновационные технологии для вашего здоровья</p>
-                        </div>
+{% block title %}О нас - Медицинский диагностический помощник{% endblock %}
 
-                        <!-- Основной контент -->
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <h3 class="text-primary mb-4">
-                                    <i class="fas fa-brain me-2"></i>
-                                    Искусственный интеллект в медицине
-                                </h3>
-                                <p class="mb-4">
-                                    Наш проект использует передовые технологии машинного обучения для помощи 
-                                    в предварительной диагностике заболеваний. Мы объединяем медицинские знания 
-                                    и современные алгоритмы AI для создания умного помощника.
-                                </p>
-                                
-                                <h3 class="text-primary mb-4">
-                                    <i class="fas fa-database me-2"></i>
-                                    Наша база знаний
-                                </h3>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="text-center">
-                                            <div class="feature-icon">
-                                                <i class="fas fa-disease"></i>
-                                            </div>
-                                            <h5>582+</h5>
-                                            <p class="text-muted">Заболеваний</p>
+{% block extra_css %}
+<style>
+    /* Анимированный градиентный фон */
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .animated-bg {
+        background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        min-height: 100vh;
+        padding-top: 80px; /* Добавляем отступ для навигации */
+    }
+    
+    .medical-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+        color: white;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .animated-bg {
+        margin-top: 0 !important;
+        padding-top: 80px !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Анимированный фон -->
+<div class="animated-bg">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Основная карточка с информацией о проекте -->
+                <div class="medical-card p-4 p-md-5 mb-4">
+                    <!-- Заголовок страницы -->
+                    <div class="text-center mb-5">
+                        <h1 class="display-4 fw-bold text-primary mb-3">
+                            <i class="fas fa-heartbeat me-3"></i>
+                            О нашем проекте
+                        </h1>
+                        <p class="lead text-muted">Инновационные технологии для вашего здоровья</p>
+                    </div>
+
+                    <!-- Основной контент страницы -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h3 class="text-primary mb-4">
+                                <i class="fas fa-brain me-2"></i>
+                                Искусственный интеллект в медицине
+                            </h3>
+                            <p class="mb-4">
+                                Наш проект использует технологии классического машинного обучения для помощи
+                                в предварительной диагностике заболеваний. Мы объединяем медицинские знания
+                                и современные алгоритмы для создания умного помощника.
+                            </p>
+                            
+                            <h3 class="text-primary mb-4">
+                                <i class="fas fa-database me-2"></i>
+                                Наша база знаний
+                            </h3>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="text-center">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-disease"></i>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="text-center">
-                                            <div class="feature-icon">
-                                                <i class="fas fa-notes-medical"></i>
-                                            </div>
-                                            <h5>318+</h5>
-                                            <p class="text-muted">Симптомов</p>
-                                        </div>
+                                        <h5>429</h5>
+                                        <p class="text-muted">Заболеваний</p>
                                     </div>
                                 </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="text-center">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-notes-medical"></i>
+                                        </div>
+                                        <h5>304</h5>
+                                        <p class="text-muted">Симптомов</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <h3 class="text-primary mb-4">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Технологии
+                            </h3>
+                            <div class="mb-4">
+                                <h6>
+                                    <i class="fas fa-robot text-success me-2"></i>Машинное обучение
+                                </h6>
+                                <p class="small text-muted">Logistic Regression с точностью 86%</p>
+                                
+                                <h6>
+                                    <i class="fas fa-code text-info me-2"></i>Современный стек
+                                </h6>
+                                <p class="small text-muted">Django, Python, Bootstrap 5</p>
+                                
+                                <h6>
+                                    <i class="fas fa-mobile-alt text-warning me-2"></i>Адаптивный дизайн
+                                </h6>
+                                <p class="small text-muted">Работает на всех устройствах</p>
                             </div>
                             
-                            <div class="col-lg-6">
-                                <h3 class="text-primary mb-4">
-                                    <i class="fas fa-chart-line me-2"></i>
-                                    Технологии
-                                </h3>
-                                <div class="mb-4">
-                                    <h6><i class="fas fa-robot text-success me-2"></i>Машинное обучение</h6>
-                                    <p class="small text-muted">Random Forest алгоритм с точностью 77%</p>
-                                    
-                                    <h6><i class="fas fa-code text-info me-2"></i>Современный стек</h6>
-                                    <p class="small text-muted">Django, Python, Bootstrap 5</p>
-                                    
-                                    <h6><i class="fas fa-mobile-alt text-warning me-2"></i>Адаптивный дизайн</h6>
-                                    <p class="small text-muted">Работает на всех устройствах</p>
-                                </div>
-                                
-                                <h3 class="text-primary mb-3">
-                                    <i class="fas fa-shield-alt me-2"></i>
-                                    Безопасность и конфиденциальность
-                                </h3>
-                                <p class="mb-4">
-                                    Все данные обрабатываются анонимно. Мы не сохраняем личную информацию 
-                                    пациентов и соблюдаем медицинскую этику.
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Важное предупреждение -->
-                        <div class="alert alert-warning mt-4">
-                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Важная информация</h5>
-                            <p class="mb-0">
-                                Наша система является <strong>помощником для предварительной диагностики</strong> 
-                                и не заменяет консультацию врача. Все решения о лечении должны приниматься 
-                                квалифицированными медицинскими специалистами.
+                            <h3 class="text-primary mb-3">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Безопасность и конфиденциальность
+                            </h3>
+                            <p class="mb-4">
+                                Все данные обрабатываются анонимно. Мы не сохраняем личную информацию
+                                пациентов и соблюдаем медицинскую этику.
                             </p>
-                        </div>
-
-                        <!-- Кнопки действий -->
-                        <div class="text-center mt-5">
-                            <a href="{% url 'home' %}" class="btn btn-primary btn-lg px-5 py-3">
-                                <i class="fas fa-stethoscope me-2"></i>
-                                Начать диагностику
-                            </a>
-                            <button class="btn btn-outline-primary btn-lg px-5 py-3 ms-3" onclick="window.print()">
-                                <i class="fas fa-print me-2"></i>
-                                Сохранить страницу
-                            </button>
                         </div>
                     </div>
 
-                    <!-- Дополнительная информация -->
-                    <div class="row text-center">
-                        <div class="col-md-4 mb-4">
-                            <div class="medical-card p-4">
-                                <i class="fas fa-graduation-cap text-primary fs-1 mb-3"></i>
-                                <h5>Образовательный проект</h5>
-                                <p class="text-muted">Создан в учебных целях для демонстрации возможностей AI в медицине</p>
-                            </div>
+                    <!-- Важное предупреждение для пользователей -->
+                    <div class="alert alert-warning mt-4">
+                        <h5>
+                            <i class="fas fa-exclamation-triangle me-2"></i>Важная информация
+                        </h5>
+                        <p class="mb-0">
+                            Наша система является <strong>помощником для предварительной диагностики</strong>
+                            и не заменяет консультацию врача. Все решения о лечении должны приниматься
+                            квалифицированными медицинскими специалистами.
+                        </p>
+                    </div>
+
+                    <!-- Кнопки действий -->
+                    <div class="text-center mt-5">
+                        <a href="{% url 'home' %}" class="btn btn-primary btn-lg px-5 py-3">
+                            <i class="fas fa-stethoscope me-2"></i>
+                            Начать диагностику
+                        </a>
+                        <button class="btn btn-outline-primary btn-lg px-5 py-3 ms-3"
+                                onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>
+                            Сохранить страницу
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Дополнительные информационные карточки -->
+                <div class="row text-center">
+                    <div class="col-md-4 mb-4">
+                        <div class="medical-card p-4">
+                            <i class="fas fa-graduation-cap text-primary fs-1 mb-3"></i>
+                            <h5>Образовательный проект</h5>
+                            <p class="text-muted">Создан в учебных целях для демонстрации возможностей AI в медицине</p>
                         </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="medical-card p-4">
-                                <i class="fas fa-code-branch text-success fs-1 mb-3"></i>
-                                <h5>Открытая разработка</h5>
-                                <p class="text-muted">Проект постоянно улучшается и дополняется новыми функциями</p>
-                            </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="medical-card p-4">
+                            <i class="fas fa-code-branch text-success fs-1 mb-3"></i>
+                            <h5>Открытая разработка</h5>
+                            <p class="text-muted">Проект постоянно улучшается и дополняется новыми функциями</p>
                         </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="medical-card p-4">
-                                <i class="fas fa-hands-helping text-info fs-1 mb-3"></i>
-                                <h5>Сообщество</h5>
-                                <p class="text-muted">Присоединяйтесь к развитию медицинских технологий будущего</p>
-                            </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="medical-card p-4">
+                            <i class="fas fa-hands-helping text-info fs-1 mb-3"></i>
+                            <h5>Сообщество</h5>
+                            <p class="text-muted">Присоединяйтесь к развитию медицинских технологий будущего</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
+{% endblock %}

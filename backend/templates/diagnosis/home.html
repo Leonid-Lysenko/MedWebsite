@@ -1,490 +1,567 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Медицинский диагностический помощник</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .medical-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .symptom-checkbox {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .symptom-checkbox:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        .symptom-checkbox input[type="checkbox"] {
-            transform: scale(1.2);
-            margin-right: 10px;
-        }
-        .btn-medical {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 50px;
-            padding: 12px 30px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-medical:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #ffffff;
-        }
-        /* Анимации для симптомов */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .symptom-item {
-            animation: fadeInUp 0.5s ease-out;
-            animation-fill-mode: both;
-        }
-        /* Плавные переходы */
-        .symptom-checkbox {
-            transition: all 0.3s ease;
-        }
-        .symptom-checkbox:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        /* Подсветка найденного текста */
-        .highlight {
-            background-color: #ffeb3b;
-            padding: 0 2px;
-            border-radius: 2px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <!-- Навигационное меню -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(10px);">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
-                <i class="fas fa-stethoscope me-2"></i>
-                Медицинский Помощник
-            </a>
-            
-            <!-- Кнопка для мобильных -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <!-- Меню -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'home' %}">
-                            <i class="fas fa-home me-1"></i>Главная
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'about' %}">
-                            <i class="fas fa-info-circle me-1"></i>О нас
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-phone me-1"></i>Контакты
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'how_to_use' %}">
-                            <i class="fas fa-question-circle me-1"></i>Как пользоваться
-                        </a>
-                    </li>
-                </ul>
+{% extends 'diagnosis/base.html' %}
+{% load static %}
+
+{% block title %}Главная - Медицинский диагностический помощник{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Основные стили для главной страницы */
+    body {
+        background: #667eea;
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .medical-card {
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        margin: 20px 10px;
+    }
+    
+    /* Стили для чекбоксов симптомов */
+    .symptom-checkbox {
+        cursor: pointer;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+    }
+    
+    .symptom-checkbox:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .symptom-checkbox input[type='checkbox'] {
+        transform: scale(1.1);
+        margin-right: 8px;
+    }
+    
+    /* Стиль для основной кнопки анализа */
+    .btn-medical {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 50px;
+        padding: 12px 30px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-medical:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    
+    /* Стиль для кнопок пагинации */
+    .btn-pagination {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+    }
+
+    /* Стили для статистических чисел */
+    .stat-number {
+        font-size: 2.2rem;
+        font-weight: bold;
+        color: #ffffff;
+    }
+
+    /* Анимация появления симптомов */
+    .symptom-item {
+        animation: fadeInUp 0.5s ease-out;
+        animation-fill-mode: both;
+    }
+
+    /* Подсветка найденного текста при поиске */
+    .highlight {
+        background-color: #ffeb3b;
+        padding: 0 2px;
+        border-radius: 2px;
+        font-weight: bold;
+    }
+
+    /* Стили для пагинации */
+    .pagination-controls {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        margin-top: 20px;
+    }
+    
+    .page-info {
+        font-weight: 500;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Заголовок страницы -->
+            <div class="text-center text-white mb-4">
+                <h1 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-stethoscope me-3"></i>
+                    Медицинский Диагностический Помощник
+                </h1>
+                <p class="lead mb-0">
+                    AI-помощник для предварительной диагностики заболеваний на основе симптомов
+                </p>
             </div>
-        </div>
-    </nav>
 
-    <!-- Добавил отступ для фиксированной навигации -->
-    <div style="padding-top: 80px;"></div>
-
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <!-- Заголовок -->
-                <div class="text-center text-white mb-5">
-                    <h1 class="display-4 fw-bold mb-3">
-                        <i class="fas fa-stethoscope me-3"></i>
-                        Медицинский Диагностический Помощник
-                    </h1>
-                    <p class="lead">AI-помощник для предварительной диагностики заболеваний на основе симптомов</p>
-                </div>
-
-                <!-- Статистика -->
-                <div class="row text-center mb-5">
-                    <div class="col-md-4">
-                        <div class="text-white">
-                            <div class="stat-number">{{ diseases_count }}+</div>
-                            <p class="mb-0">Заболеваний в базе</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-white">
-                            <div class="stat-number">{{ symptoms_count }}+</div>
-                            <p class="mb-0">Симптомов для анализа</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-white">
-                            <div class="stat-number">AI</div>
-                            <p class="mb-0">Машинное обучение</p>
-                        </div>
+            <!-- Блок статистики системы -->
+            <div class="row text-center mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="text-white">
+                        <div class="stat-number">{{ diseases_count }}</div>
+                        <p class="mb-0">Заболеваний в базе</p>
                     </div>
                 </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-white">
+                        <div class="stat-number">{{ symptoms_count }}</div>
+                        <p class="mb-0">Симптомов для анализа</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-white">
+                        <div class="stat-number">ML</div>
+                        <p class="mb-0">Машинное обучение</p>
+                    </div>
+                </div>
+            </div>
 
-                <!-- Основная карточка -->
-                <div class="medical-card p-4 p-md-5 mb-4">
-                    <form method="POST" action="{% url 'predict' %}">
-                        {% csrf_token %}
+            <!-- Рекомендация для пользователей -->
+            <div class="text-center text-white mb-4">
+                <p class="mb-0">
+                    <em>Перед использованием изучите раздел
+                        <strong>
+                            <a href="{% url 'how_to_use' %}" style="color: #ffffff; text-decoration: underline;">
+                                "Как пользоваться"
+                            </a>
+                        </strong>
+                        для точных результатов
+                    </em>
+                </p>
+            </div>
 
-                        <!-- Улучшенный поиск симптомов -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-primary mb-3">
-                                <i class="fas fa-search me-2"></i>
-                                Поиск симптомов:
-                            </label>
-                            
-                            <div class="input-group input-group-lg mb-3">
-                                <span class="input-group-text bg-primary text-white">
-                                    <i class="fas fa-search"></i>
-                                </span>
-                                <input type="text" id="symptomSearch" class="form-control" 
-                                       placeholder="Начните вводить название симптома...">
-                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
-                                    <i class="fas fa-times"></i> Очистить
-                                </button>
-                            </div>
-                            
-                            <!-- Счетчик результатов -->
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted" id="searchResultsCount">
-                                    Найдено: <span id="foundCount">{{ symptoms|length }}</span> из {{ symptoms|length }} симптомов
-                                </small>
-                                <small class="text-muted" id="selectedCountBadge">
-                                    Выбрано: <span id="selectedCount">0</span>
-                                </small>
-                            </div>
-                        </div>
+            <!-- Основная карточка с формой ввода симптомов -->
+            <div class="medical-card p-4 p-md-5 mb-4">
+                <form method="POST" action="{% url 'predict' %}">
+                    {% csrf_token %}
 
-                        <!-- Баннер выбранных симптомов -->
-                        <div class="alert alert-success mb-4" id="selectedSymptomsBanner" style="display: none;">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    <strong>Выбранные симптомы:</strong>
-                                    <span id="selectedSymptomsList"></span>
-                                </div>
-                                <button class="btn btn-sm btn-outline-success" id="clearAllSymptoms" type="button">
-                                    <i class="fas fa-times me-1"></i>Очистить все
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Симптомы -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-primary mb-3">
-                                <i class="fas fa-notes-medical me-2"></i>
-                                Выберите симптомы (отметьте все подходящие):
-                            </label>
-
-                            <!-- Верхняя кнопка -->
-                            <div class="text-center mb-4" id="topAnalyzeBtn" style="display: none;">
-                                <button type="submit" class="btn btn-medical text-white px-4 py-3 fs-6">
-                                    <i class="fas fa-search me-2"></i>
-                                    Анализировать выбранные симптомы (<span class="symptom-count">0</span>)
-                                </button>
-                                <div class="mt-2">
-                                    <small class="text-muted">или продолжите выбор симптомов ниже</small>
-                                </div>
-                            </div>
-                            
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Модель проанализирует выбранные симптомы и определит наиболее вероятные заболевания
-                            </div>
-                            
-                            <div class="row g-3" id="symptoms-grid">
-                                {% for symptom in symptoms %}
-                                <div class="col-md-6 col-lg-4 symptom-item">
-                                    <div class="form-check p-3 symptom-checkbox border rounded h-100">
-                                        <input class="form-check-input" type="checkbox" name="symptoms" 
-                                               value="{{ symptom }}" id="symptom{{ forloop.counter }}"
-                                               data-symptom="{{ symptom|lower }}">
-                                        <label class="form-check-label w-100" for="symptom{{ forloop.counter }}"
-                                               data-original="{{ symptom }}">
-                                            {{ symptom }}
-                                        </label>
-                                    </div>
-                                </div>
-                                {% empty %}
-                                <div class="col-12">
-                                    <div class="alert alert-warning text-center">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        Симптомы не загружены. Проверьте загрузку ML модели.
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Сообщение если ничего не найдено -->
-                            <div class="alert alert-warning text-center mt-4" id="noResultsMessage" style="display: none;">
-                                <i class="fas fa-search me-2"></i>
-                                Симптомы не найдены. Попробуйте изменить запрос.
-                            </div>
+                    <!-- Блок поиска симптомов -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-primary mb-3">
+                            <i class="fas fa-search me-2"></i>
+                            Поиск симптомов:
+                        </label>
+                        
+                        <!-- Поле поиска с кнопками -->
+                        <div class="input-group input-group-lg mb-3">
+                            <span class="input-group-text bg-primary text-white">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input
+                                type="text"
+                                id="symptomSearch"
+                                class="form-control"
+                                placeholder="Начните вводить название симптома..."
+                            />
+                            <button
+                                class="btn btn-outline-secondary"
+                                type="button"
+                                id="clearSearch"
+                            >
+                                <i class="fas fa-times"></i> Очистить
+                            </button>
                         </div>
                         
-                        <!-- Нижняя кнопка -->
-                        <div class="text-center mt-5">
-                            <button type="submit" class="btn btn-medical text-white px-5 py-3 fs-5">
+                        <!-- Счетчики результатов -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <small class="text-muted" id="searchResultsCount">
+                                Найдено: <span id="foundCount">{{ symptoms|length }}</span> из {{ symptoms|length }} симптомов
+                            </small>
+                            <small class="text-muted" id="selectedCountBadge">
+                                Выбрано: <span id="selectedCount">0</span>
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Баннер выбранных симптомов -->
+                    <div
+                        class="alert alert-success mb-4"
+                        id="selectedSymptomsBanner"
+                        style="display: none"
+                    >
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Выбранные симптомы:</strong>
+                                <span id="selectedSymptomsList"></span>
+                            </div>
+                            <button
+                                class="btn btn-sm btn-outline-success"
+                                id="clearAllSymptoms"
+                                type="button"
+                            >
+                                <i class="fas fa-times me-1"></i>Очистить все
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Блок выбора симптомов -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-primary mb-3">
+                            <i class="fas fa-notes-medical me-2"></i>
+                            Выберите симптомы (отметьте все подходящие):
+                        </label>
+
+                        <!-- Верхняя кнопка анализа (появляется при выборе симптомов) -->
+                        <div class="text-center mb-4" id="topAnalyzeBtn" style="display: none">
+                            <button
+                                type="submit"
+                                class="btn btn-medical text-white px-4 py-3"
+                            >
                                 <i class="fas fa-search me-2"></i>
                                 Анализировать выбранные симптомы (<span class="symptom-count">0</span>)
                             </button>
+                            <div class="mt-2">
+                                <small class="text-muted">или продолжите выбор симптомов ниже</small>
+                            </div>
                         </div>
-                    </form>
-                </div>
 
-                <!-- Предупреждение -->
-                <div class="alert alert-warning text-center">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Важно:</strong> Данная система является помощником для предварительной диагностики. 
-                    Для точного диагноза и лечения обязательно обратитесь к врачу!
-                </div>
+                        <!-- Информационное сообщение -->
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Модель проанализирует выбранные симптомы и определит наиболее вероятные заболевания
+                        </div>
+
+                        <!-- Сетка симптомов -->
+                        <div class="row g-3" id="symptoms-grid">
+                            {% for symptom in symptoms %}
+                            <div class="col-md-6 col-lg-4 symptom-item">
+                                <div class="form-check p-3 symptom-checkbox border rounded h-100">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="symptoms"
+                                        value="{{ symptom }}"
+                                        id="symptom{{ forloop.counter }}"
+                                        data-symptom="{{ symptom|lower }}"
+                                    />
+                                    <label
+                                        class="form-check-label w-100"
+                                        for="symptom{{ forloop.counter }}"
+                                        data-original="{{ symptom }}"
+                                    >
+                                        {{ symptom }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <!-- Сообщение при отсутствии симптомов -->
+                            <div class="col-12">
+                                <div class="alert alert-warning text-center">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Симптомы не загружены. Проверьте загрузку ML модели.
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Элементы управления пагинацией -->
+                        <div class="pagination-controls text-center" id="paginationControls">
+                            <button type="button" class="btn btn-outline-primary btn-pagination me-2" id="prevPage" disabled>
+                                <i class="fas fa-chevron-left me-1"></i>Назад
+                            </button>
+                            <span class="mx-3 page-info" id="pageInfo">Страница 1 из 7</span>
+                            <button type="button" class="btn btn-outline-primary btn-pagination ms-2" id="nextPage">
+                                Вперед<i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                            <div class="mt-2">
+                                <small class="text-muted">Показано <span id="shownCount">45</span> из {{ symptoms|length }} симптомов</small>
+                            </div>
+                        </div>
+
+                        <!-- Сообщение при отсутствии результатов поиска -->
+                        <div
+                            class="alert alert-warning text-center mt-4"
+                            id="noResultsMessage"
+                            style="display: none"
+                        >
+                            <i class="fas fa-search me-2"></i>
+                            Симптомы не найдены. Попробуйте изменить запрос.
+                        </div>
+                    </div>
+
+                    <!-- Основная кнопка отправки формы -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-medical text-white px-5 py-3">
+                            <i class="fas fa-search me-2"></i>
+                            Анализировать выбранные симптомы (<span class="symptom-count">0</span>)
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Важное предупреждение для пользователей -->
+            <div class="alert alert-warning text-center">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Важно:</strong> Данная система является помощником для предварительной диагностики. 
+                Для точного диагноза и лечения обязательно обратитесь к врачу!
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Глобальные переменные
-        let allSymptoms = [];
-        let selectedSymptoms = new Set();
+{% block extra_js %}
+<script>
+    // Глобальные переменные для управления состоянием интерфейса
+    let selectedSymptoms = new Set();
+    let allSymptoms = [];
+    let currentPage = 1;
+    const symptomsPerPage = 45;
+    let totalPages = 1;
+    let currentSearchTerm = '';
 
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeSymptoms();
-            setupEventListeners();
-            updateSelectedCount();
-            animateSymptoms();
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function () {
+        initializePagination();
+        setupEventListeners();
+        updateSelectedCount();
+    });
+
+    // Инициализация пагинации симптомов
+    function initializePagination() {
+        const symptomItems = document.querySelectorAll('.symptom-item');
+        allSymptoms = Array.from(symptomItems);
+        totalPages = Math.ceil(allSymptoms.length / symptomsPerPage);
+        
+        // Скрываем все симптомы и показываем только первую страницу
+        allSymptoms.forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        showPage(1);
+        
+        // Восстанавливаем выбранные симптомы при перезагрузке страницы
+        document.querySelectorAll('input[name="symptoms"]:checked').forEach(checkbox => {
+            selectedSymptoms.add(checkbox.value);
+        });
+        updateSelectedCount();
+    }
+
+    // Настройка обработчиков событий
+    function setupEventListeners() {
+        // Обработчик поиска симптомов
+        document.getElementById('symptomSearch').addEventListener('input', function(e) {
+            currentSearchTerm = e.target.value.trim().toLowerCase();
+            currentPage = 1;
+            performSearch(currentSearchTerm);
         });
 
-        function initializeSymptoms() {
-            // Сохраняем все симптомы
-            const symptomItems = document.querySelectorAll('.symptom-item');
-            allSymptoms = Array.from(symptomItems).map(item => ({
-                element: item,
-                text: item.querySelector('label').dataset.original.toLowerCase(),
-                checkbox: item.querySelector('input[type="checkbox"]')
-            }));
-            
-            // Показываем счетчик
-            updateSearchResultsCount(allSymptoms.length);
-            
-            // Инициализируем выбранные симптомы
-            document.querySelectorAll('input[name="symptoms"]:checked').forEach(checkbox => {
-                selectedSymptoms.add(checkbox.value);
-            });
-            updateSelectedCount();
-        }
+        // Обработчик очистки поиска
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            document.getElementById('symptomSearch').value = '';
+            currentSearchTerm = '';
+            currentPage = 1;
+            performSearch('');
+        });
 
-        function setupEventListeners() {
-            // Поиск симптомов
-            document.getElementById('symptomSearch').addEventListener('input', function(e) {
-                performSearch(e.target.value.trim().toLowerCase());
-            });
-
-            // Очистка поиска
-            document.getElementById('clearSearch').addEventListener('click', function() {
-                document.getElementById('symptomSearch').value = '';
-                performSearch('');
-            });
-
-            // Очистка всех выбранных симптомов
-            document.getElementById('clearAllSymptoms').addEventListener('click', clearAllSymptoms);
-
-            // Отслеживание выбора симптомов
-            document.querySelectorAll('input[name="symptoms"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    handleSymptomSelection(this);
-                });
-            });
-        }
-
-        function performSearch(searchTerm) {
-            if (searchTerm === '') {
-                showAllSymptoms();
-                return;
+        // Обработчик очистки всех выбранных симптомов
+        document.getElementById('clearAllSymptoms').addEventListener('click', clearAllSymptoms);
+        
+        // Обработчики пагинации
+        document.getElementById('prevPage').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentPage > 1) {
+                showPage(currentPage - 1);
             }
+        });
+        
+        document.getElementById('nextPage').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentPage < totalPages) {
+                showPage(currentPage + 1);
+            }
+        });
 
-            let foundCount = 0;
-            const searchResults = [];
+        // Обработчик выбора симптомов
+        document.addEventListener('change', function(e) {
+            if (e.target.name === 'symptoms') {
+                handleSymptomSelection(e.target);
+            }
+        });
+    }
 
-            allSymptoms.forEach(symptom => {
-                const element = symptom.element;
-                const label = element.querySelector('label');
-                const originalText = label.dataset.original;
-                
-                const index = symptom.text.indexOf(searchTerm);
-                const isMatch = index !== -1;
-                
-                if (isMatch) {
-                    foundCount++;
-                    
-                    const highlightedText = originalText.replace(
-                        new RegExp(searchTerm, 'gi'),
-                        match => `<span class="highlight">${match}</span>`
-                    );
-                    label.innerHTML = highlightedText;
-                    
-                    const rank = index;
-                    searchResults.push({ element, rank, originalText });
-                    
-                    element.style.display = 'block';
-                } else {
-                    element.style.display = 'none';
-                    label.innerHTML = originalText;
-                }
-            });
-
-            searchResults.sort((a, b) => a.rank - b.rank);
-            
-            const symptomsGrid = document.getElementById('symptoms-grid');
-            searchResults.forEach(result => {
-                symptomsGrid.appendChild(result.element);
-            });
-
-            const noResultsMessage = document.getElementById('noResultsMessage');
-            noResultsMessage.style.display = foundCount === 0 ? 'block' : 'none';
-
-            updateSearchResultsCount(foundCount);
+    // Отображение конкретной страницы симптомов
+    function showPage(page) {
+        currentPage = page;
+        
+        // Скрываем все симптомы
+        allSymptoms.forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        // Показываем симптомы для текущей страницы
+        const startIndex = (page - 1) * symptomsPerPage;
+        const endIndex = startIndex + symptomsPerPage;
+        
+        for (let i = startIndex; i < endIndex && i < allSymptoms.length; i++) {
+            allSymptoms[i].style.display = 'block';
         }
+        
+        updatePaginationInfo();
+    }
 
-        function showAllSymptoms() {
-            allSymptoms.forEach(symptom => {
-                symptom.element.style.display = 'block';
-                const label = symptom.element.querySelector('label');
-                label.innerHTML = label.dataset.original;
-            });
-            
+    // Обновление информации о пагинации
+    function updatePaginationInfo() {
+        document.getElementById('pageInfo').textContent = `Страница ${currentPage} из ${totalPages}`;
+        const shownCount = Math.min(symptomsPerPage, allSymptoms.length - (currentPage - 1) * symptomsPerPage);
+        document.getElementById('shownCount').textContent = shownCount;
+        
+        // Блокировка кнопок навигации при достижении границ
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage === totalPages;
+    }
+
+    // Выполнение поиска симптомов
+    function performSearch(searchTerm) {
+        if (searchTerm === '') {
+            // Если поиск пустой, возвращаем обычную пагинацию
+            showPage(1);
             document.getElementById('noResultsMessage').style.display = 'none';
+            document.getElementById('paginationControls').style.display = 'block';
             updateSearchResultsCount(allSymptoms.length);
+            
+            document.getElementById('prevPage').style.display = 'inline-block';
+            document.getElementById('nextPage').style.display = 'inline-block';
+            return;
         }
 
-        function handleSymptomSelection(checkbox) {
-            const symptomValue = checkbox.value;
+        let foundCount = 0;
+        
+        // Фильтрация симптомов по поисковому запросу
+        allSymptoms.forEach((item) => {
+            const label = item.querySelector('label');
+            const originalText = label.dataset.original.toLowerCase();
+            const isMatch = originalText.includes(searchTerm);
             
-            if (checkbox.checked) {
-                selectedSymptoms.add(symptomValue);
-                checkbox.parentElement.style.backgroundColor = '#e8f4fd';
-                checkbox.parentElement.style.borderColor = '#667eea';
+            if (isMatch) {
+                foundCount++;
+                item.style.display = 'block';
+                
+                // Подсветка найденного текста
+                const highlightedText = label.dataset.original.replace(
+                    new RegExp(searchTerm, 'gi'),
+                    match => `<span class="highlight">${match}</span>`
+                );
+                label.innerHTML = highlightedText;
             } else {
-                selectedSymptoms.delete(symptomValue);
-                checkbox.parentElement.style.backgroundColor = '';
-                checkbox.parentElement.style.borderColor = '';
+                item.style.display = 'none';
+                label.innerHTML = label.dataset.original;
             }
-            
-            updateSelectedCount();
+        });
+
+        // Управление отображением сообщений и элементов управления
+        document.getElementById('noResultsMessage').style.display = foundCount === 0 ? 'block' : 'none';
+        document.getElementById('paginationControls').style.display = foundCount === 0 ? 'none' : 'block';
+        updateSearchResultsCount(foundCount);
+        
+        if (foundCount > 0) {
+            // В режиме поиска скрываем стандартную пагинацию
+            document.getElementById('pageInfo').textContent = `Найдено: ${foundCount}`;
+            document.getElementById('shownCount').textContent = foundCount;
+            document.getElementById('prevPage').style.display = 'none';
+            document.getElementById('nextPage').style.display = 'none';
+        } else {
+            document.getElementById('prevPage').style.display = 'inline-block';
+            document.getElementById('nextPage').style.display = 'inline-block';
+        }
+    }
+
+    // Обработка выбора/снятия выбора симптома
+    function handleSymptomSelection(checkbox) {
+        const symptomValue = checkbox.value;
+
+        if (checkbox.checked) {
+            selectedSymptoms.add(symptomValue);
+            checkbox.parentElement.style.backgroundColor = '#e8f4fd';
+        } else {
+            selectedSymptoms.delete(symptomValue);
+            checkbox.parentElement.style.backgroundColor = '';
         }
 
-        function updateSelectedCount() {
-            const count = selectedSymptoms.size;
-            
-            // Обновляем ВСЕ элементы с классом symptom-count
-            const symptomCountElements = document.querySelectorAll('.symptom-count');
-            symptomCountElements.forEach(element => {
-                element.textContent = count;
-            });
-            
-            // Обновляем счетчик в баннере
-            const selectedCountElement = document.getElementById('selectedCount');
-            if (selectedCountElement) {
-                selectedCountElement.textContent = count;
-            }
-            
-            // Обновляем счетчик в строке поиска
-            const selectedCountBadge = document.getElementById('selectedCountBadge');
-            if (selectedCountBadge) {
-                selectedCountBadge.innerHTML = `Выбрано: <strong>${count}</strong>`;
-            }
-            
-            // Показываем/скрываем верхнюю кнопку
-            const topBtn = document.getElementById('topAnalyzeBtn');
-            if (topBtn) {
-                if (count > 0) {
-                    topBtn.style.display = 'block';
-                } else {
-                    topBtn.style.display = 'none';
-                }
-            }
-            
-            // Обновляем баннер выбранных симптомов
-            updateSelectedSymptomsBanner();
+        updateSelectedCount();
+    }
+
+    // Обновление счетчика выбранных симптомов
+    function updateSelectedCount() {
+        const count = selectedSymptoms.size;
+        
+        // Обновление всех элементов с количеством симптомов
+        document.querySelectorAll('.symptom-count').forEach(element => {
+            element.textContent = count;
+        });
+
+        const selectedCountElement = document.getElementById('selectedCount');
+        if (selectedCountElement) {
+            selectedCountElement.textContent = count;
         }
 
-        function updateSearchResultsCount(found) {
-            const foundCountElement = document.getElementById('foundCount');
-            if (foundCountElement) {
-                foundCountElement.textContent = found;
+        const selectedCountBadge = document.getElementById('selectedCountBadge');
+        if (selectedCountBadge) {
+            selectedCountBadge.innerHTML = `Выбрано: <strong>${count}</strong>`;
+        }
+
+        // Показ/скрытие верхней кнопки анализа
+        const topBtn = document.getElementById('topAnalyzeBtn');
+        if (topBtn) {
+            topBtn.style.display = count > 0 ? 'block' : 'none';
+        }
+
+        updateSelectedSymptomsBanner();
+    }
+
+    // Обновление счетчика результатов поиска
+    function updateSearchResultsCount(found) {
+        const foundCountElement = document.getElementById('foundCount');
+        if (foundCountElement) {
+            foundCountElement.textContent = found;
+        }
+    }
+
+    // Обновление баннера выбранных симптомов
+    function updateSelectedSymptomsBanner() {
+        const banner = document.getElementById('selectedSymptomsBanner');
+        const symptomsList = document.getElementById('selectedSymptomsList');
+
+        if (banner && symptomsList) {
+            if (selectedSymptoms.size > 0) {
+                symptomsList.textContent = Array.from(selectedSymptoms).join(', ');
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
             }
         }
+    }
 
-        function updateSelectedSymptomsBanner() {
-            const banner = document.getElementById('selectedSymptomsBanner');
-            const symptomsList = document.getElementById('selectedSymptomsList');
-            
-            if (banner && symptomsList) {
-                if (selectedSymptoms.size > 0) {
-                    symptomsList.textContent = Array.from(selectedSymptoms).join(', ');
-                    banner.style.display = 'block';
-                } else {
-                    banner.style.display = 'none';
-                }
-            }
-        }
+    // Очистка всех выбранных симптомов
+    function clearAllSymptoms() {
+        document.querySelectorAll('input[name="symptoms"]:checked').forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.parentElement.style.backgroundColor = '';
+        });
 
-        function clearAllSymptoms() {
-            document.querySelectorAll('input[name="symptoms"]:checked').forEach(checkbox => {
-                checkbox.checked = false;
-                checkbox.parentElement.style.backgroundColor = '';
-                checkbox.parentElement.style.borderColor = '';
-            });
-            
-            selectedSymptoms.clear();
-            updateSelectedCount();
-        }
-
-        function animateSymptoms() {
-            const symptoms = document.querySelectorAll('.symptom-item');
-            symptoms.forEach((symptom, index) => {
-                symptom.style.animationDelay = `${(index % 20) * 0.05}s`;
-            });
-        }
-    </script>
-</body>
-</html>
+        selectedSymptoms.clear();
+        updateSelectedCount();
+    }
+</script>
+{% endblock %}

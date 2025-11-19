@@ -1,479 +1,497 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ disease_name }} - Детальная информация</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-top: 80px;
-        }
-        .medical-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .severity-high { border-left: 5px solid #dc3545; }
-        .severity-medium { border-left: 5px solid #fd7e14; }
-        .severity-low { border-left: 5px solid #28a745; }
-        .symptom-tag {
-            background: #e9ecef;
-            border-radius: 20px;
-            padding: 5px 12px;
-            margin: 3px;
-            display: inline-block;
-            font-size: 0.9em;
-        }
-        #medicalMap {
-            height: 400px;
-            border-radius: 15px;
-            z-index: 1;
-        }
-        .emergency-card {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-            color: white;
-            border-radius: 15px;
-        }
-        .nav-link {
-            transition: all 0.3s ease;
-        }
-        .nav-link:hover {
-            transform: translateY(-2px);
-        }
-        .medical-facility-icon {
-            background: transparent !important;
-            border: none !important;
-        }
-        .leaflet-popup-content {
-            margin: 8px 12px;
-        }
-        .leaflet-popup-content-wrapper {
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        /* Скрываем атрибуцию Leaflet */
-        .leaflet-control-attribution {
-            display: none !important;
-        }
-    </style>
-</head>
-<body>
-    <!-- Навигационное меню -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(102, 126, 234, 0.95); backdrop-filter: blur(10px);">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
-                <i class="fas fa-stethoscope me-2"></i>
-                Медицинский Помощник
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">
-                            <i class="fas fa-home me-1"></i>Главная
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'about' %}">
-                            <i class="fas fa-info-circle me-1"></i>О нас
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'how_to_use' %}">
-                            <i class="fas fa-question-circle me-1"></i>Как пользоваться
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends 'diagnosis/base.html' %}
+{% load static %}
 
-    <div class="container py-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <!-- Путь -->
-                <nav aria-label="breadcrumb" class="mb-4">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-white">Главная</a></li>
-                        <li class="breadcrumb-item"><a href="javascript:history.back()" class="text-white">Результаты диагностики</a></li>
-                        <li class="breadcrumb-item active text-white" aria-current="page">{{ disease_name }}</li>
-                    </ol>
-                </nav>
+{% block title %}{{ disease_name }} - Детальная информация{% endblock %}
 
-                <!-- Основная карточка заболевания -->
-                <div class="medical-card p-4 p-md-5 mb-4 {% if severity == 'high' %}severity-high{% elif severity == 'medium' %}severity-medium{% else %}severity-low{% endif %}">
-                    <!-- Заголовок -->
-                    <div class="text-center mb-5">
-                        <h1 class="display-5 fw-bold text-primary mb-3">
-                            <i class="fas fa-disease me-3"></i>
-                            {{ disease_name }}
-                        </h1>
-                        <div class="badge bg-{% if severity == 'high' %}danger{% elif severity == 'medium' %}warning text-dark{% else %}success{% endif %} fs-6 px-3 py-2">
-                            <i class="fas fa-{% if severity == 'high' %}exclamation-triangle{% elif severity == 'medium' %}info-circle{% else %}check-circle{% endif %} me-2"></i>
-                            {% if severity == 'high' %}Высокая срочность{% elif severity == 'medium' %}Средняя срочность{% else %}Низкая срочность{% endif %}
-                        </div>
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    /* Основные стили для страницы детальной информации */
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .medical-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Стили для индикаторов серьезности заболевания */
+    .severity-high { border-left: 5px solid #dc3545; }
+    .severity-medium { border-left: 5px solid #fd7e14; }
+    .severity-low { border-left: 5px solid #28a745; }
+    
+    /* Стили для тегов симптомов */
+    .symptom-tag {
+        background: #e9ecef;
+        border-radius: 20px;
+        padding: 5px 12px;
+        margin: 3px;
+        display: inline-block;
+        font-size: 0.9em;
+    }
+    
+    /* Стили для карты медицинских учреждений */
+    #medicalMap {
+        height: 400px;
+        border-radius: 15px;
+        z-index: 1;
+    }
+    
+    /* Стили для карточки экстренных контактов */
+    .emergency-card {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 15px;
+    }
+    
+    /* Стили для кастомных иконок на карте */
+    .medical-facility-icon {
+        background: transparent !important;
+        border: none !important;
+    }
+    
+    .leaflet-popup-content {
+        margin: 8px 12px;
+    }
+    
+    .leaflet-popup-content-wrapper {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Скрываем атрибуцию Leaflet */
+    .leaflet-control-attribution {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Навигационная цепочка (breadcrumb) -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'home' %}" class="text-white">Главная</a>
+                    </li>
+                    {% if is_from_knowledge_base %}
+                        <!-- Навигация для перехода из базы знаний -->
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'knowledge_base' %}" class="text-white">База знаний</a>
+                        </li>
+                    {% else %}
+                        <!-- Навигация для перехода из результатов диагностики -->
+                        <li class="breadcrumb-item">
+                            <a href="javascript:history.back()" class="text-white">Результаты диагностики</a>
+                        </li>
+                    {% endif %}
+                    <li class="breadcrumb-item active text-white" aria-current="page">{{ disease_name }}</li>
+                </ol>
+            </nav>
+
+            <!-- Основная карточка с информацией о заболевании -->
+            <div class="medical-card p-4 p-md-5 mb-4 
+                {% if severity == 'high' %}severity-high
+                {% elif severity == 'medium' %}severity-medium
+                {% else %}severity-low{% endif %}">
+                
+                <!-- Заголовок заболевания -->
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-primary mb-3">
+                        <i class="fas fa-disease me-3"></i>
+                        {{ disease_name }}
+                    </h1>
+                    <!-- Бейдж серьезности заболевания -->
+                    <div class="badge bg-{% if severity == 'high' %}danger{% elif severity == 'medium' %}warning text-dark{% else %}success{% endif %} fs-6 px-3 py-2">
+                        <i class="fas fa-{% if severity == 'high' %}exclamation-triangle{% elif severity == 'medium' %}info-circle{% else %}check-circle{% endif %} me-2"></i>
+                        {% if severity == 'high' %}
+                            Высокая срочность
+                        {% elif severity == 'medium' %}
+                            Средняя срочность
+                        {% else %}
+                            Низкая срочность
+                        {% endif %}
                     </div>
+                </div>
 
-                    <div class="row">
-                        <!-- Левая колонка - Основная информация -->
-                        <div class="col-lg-8">
-                            <!-- Описание заболевания -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header bg-primary text-white">
-                                    <h4 class="mb-0">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        Описание заболевания
-                                    </h4>
-                                </div>
-                                <div class="card-body">
-                                    <p class="card-text">{{ description }}</p>
-                                </div>
+                <!-- Основной контент в двух колонках -->
+                <div class="row">
+                    <!-- Левая колонка - основная медицинская информация -->
+                    <div class="col-lg-8">
+                        <!-- Карточка с описанием заболевания -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Описание заболевания
+                                </h4>
                             </div>
+                            <div class="card-body">
+                                <p class="card-text">{{ description }}</p>
+                            </div>
+                        </div>
 
-                            <!-- Лечение и рекомендации -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header bg-success text-white">
-                                    <h4 class="mb-0">
-                                        <i class="fas fa-heartbeat me-2"></i>
-                                        Лечение и рекомендации
-                                    </h4>
-                                </div>
-                                <div class="card-body">
-                                    <p class="card-text">{{ treatment }}</p>
-                                    {% if symptoms %}
+                        <!-- Карточка с лечением и рекомендациями -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-heartbeat me-2"></i>
+                                    Лечение и рекомендации
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">{{ treatment }}</p>
+                                {% if symptoms %}
                                     <div class="mt-3">
-                                        <h6><i class="fas fa-list me-2"></i>Ключевые симптомы:</h6>
+                                        <h6>
+                                            <i class="fas fa-list me-2"></i>Ключевые симптомы:
+                                        </h6>
                                         <div class="mt-2">
                                             {% for symptom in symptoms %}
-                                            <span class="symptom-tag">{{ symptom }}</span>
+                                                <span class="symptom-tag">{{ symptom }}</span>
                                             {% endfor %}
                                         </div>
                                     </div>
-                                    {% endif %}
-                                </div>
+                                {% endif %}
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Правая колонка - Дополнительная информация -->
-                        <div class="col-lg-4">
-                            <!-- Информационная карточка -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header bg-info text-white">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-user-md me-2"></i>
-                                        Медицинская информация
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <strong><i class="fas fa-stethoscope me-2 text-primary"></i>Специалист:</strong>
-                                        <p class="mb-0 mt-1">{{ specialist }}</p>
-                                    </div>
-                                    <div class="mb-3">
-                                        <strong><i class="fas fa-folder me-2 text-primary"></i>Категория:</strong>
-                                        <p class="mb-0 mt-1">{{ category }}</p>
-                                    </div>
-                                    <div>
-                                        <strong><i class="fas fa-clock me-2 text-primary"></i>Рекомендуемые действия:</strong>
-                                        <p class="mb-0 mt-1">
-                                            {% if severity == 'high' %}
-                                            <span class="text-danger">Немедленно обратитесь к врачу</span>
-                                            {% elif severity == 'medium' %}
-                                            <span class="text-warning">Запишитесь на прием в ближайшее время</span>
-                                            {% else %}
-                                            <span class="text-success">Плановый визит к специалисту</span>
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Экстренные контакты -->
-                            <div class="emergency-card p-4 mb-4">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-phone-alt me-2"></i>
-                                    Экстренные контакты
+                    <!-- Правая колонка - дополнительная информация -->
+                    <div class="col-lg-4">
+                        <!-- Карточка с медицинской информацией -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user-md me-2"></i>
+                                    Медицинская информация
                                 </h5>
-                                <div class="mb-2">
-                                    <strong>112</strong> - Единая служба спасения
+                            </div>
+                            <div class="card-body">
+                                <!-- Информация о специалисте -->
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-stethoscope me-2 text-primary"></i>Специалист:</strong>
+                                    <p class="mb-0 mt-1">{{ specialist }}</p>
                                 </div>
-                                <div class="mb-2">
-                                    <strong>103</strong> - Скорая помощь
+                                
+                                <!-- Информация о категории заболевания -->
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-folder me-2 text-primary"></i>Категория:</strong>
+                                    <p class="mb-0 mt-1">{{ category }}</p>
+                                </div>
+                                
+                                <!-- Рекомендуемые действия в зависимости от серьезности -->
+                                <div>
+                                    <strong><i class="fas fa-clock me-2 text-primary"></i>Рекомендуемые действия:</strong>
+                                    <p class="mb-0 mt-1">
+                                        {% if severity == 'high' %}
+                                            <span class="text-danger">Немедленно обратитесь к врачу</span>
+                                        {% elif severity == 'medium' %}
+                                            <span class="text-warning">Запишитесь на прием в ближайшее время</span>
+                                        {% else %}
+                                            <span class="text-success">Плановый визит к специалисту</span>
+                                        {% endif %}
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Карта медицинских учреждений -->
-                    <div class="card mb-4 border-0 shadow-sm">
-                        <div class="card-header bg-warning text-dark">
-                            <h4 class="mb-0">
-                                <i class="fas fa-map-marker-alt me-2"></i>
-                                Ближайшие медицинские учреждения
-                            </h4>
-                        </div>
-                        <div class="card-body p-0">
-                            <div id="medicalMap"></div>
-                            <div class="p-3 bg-light">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Карта показывает ближайшие медицинские учреждения в радиусе 5 км. Для точного местоположения разрешите доступ к геолокации.
-                                </small>
+                        <!-- Карточка с экстренными контактами -->
+                        <div class="emergency-card p-4 mb-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-phone-alt me-2"></i>
+                                Экстренные контакты
+                            </h5>
+                            <div class="mb-2">
+                                <strong>112</strong> - Единая служба спасения
+                            </div>
+                            <div class="mb-2">
+                                <strong>103</strong> - Скорая помощь
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Кнопки действий -->
-                    <div class="text-center mt-4">
-                        <a href="{% url 'home' %}" class="btn btn-primary btn-lg px-5 py-3 me-3">
-                            <i class="fas fa-arrow-left me-2"></i>
-                            Новая диагностика
-                        </a>
-                        <button class="btn btn-outline-primary btn-lg px-5 py-3" onclick="window.print()">
-                            <i class="fas fa-print me-2"></i>
-                            Сохранить информацию
-                        </button>
                     </div>
                 </div>
 
-                <!-- Важное предупреждение -->
-                <div class="alert alert-danger text-center">
-                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Важная информация</h5>
-                    <p class="mb-0">
-                        Данная информация носит ознакомительный характер. Для точной диагностики и лечения 
-                        обязательно обратитесь к квалифицированному медицинскому специалисту. 
-                        Не занимайтесь самолечением.
-                    </p>
+                <!-- Карта медицинских учреждений -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            Ближайшие медицинские учреждения
+                        </h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Контейнер для карты -->
+                        <div id="medicalMap"></div>
+                        <div class="p-3 bg-light">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Карта показывает ближайшие медицинские учреждения в радиусе 5 км. 
+                                Для точного местоположения разрешите доступ к геолокации.
+                            </small>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Библиотеки -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <script>
-        // Инициализация карты с реальными медицинскими учреждениями
-        function initMap() {
-            // Создаем карту
-            const map = L.map('medicalMap').setView([55.7558, 37.6173], 13);
-            
-            // Используем нейтральные карты без атрибуции
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-                attribution: ''
-            }).addTo(map);
-
-            // Убираем все элементы управления атрибуцией
-            map.attributionControl.setPrefix('');
-
-            // Попытка получить геолокацию пользователя
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const userLat = position.coords.latitude;
-                        const userLng = position.coords.longitude;
-                        
-                        // Центрируем карту на пользователе
-                        map.setView([userLat, userLng], 14);
-                        
-                        // Добавляем маркер пользователя
-                        L.marker([userLat, userLng])
-                            .addTo(map)
-                            .bindPopup('<div class="text-center"><strong>Ваше местоположение</strong><br><small>Ищем ближайшие медицинские учреждения...</small></div>')
-                            .openPopup();
-                        
-                        // Ищем реальные медицинские учреждения вокруг
-                        findRealMedicalFacilities(map, userLat, userLng);
-                    },
-                    function(error) {
-                        console.log('Геолокация недоступна:', error);
-                        // Используем Москву по умолчанию
-                        findRealMedicalFacilities(map, 55.7558, 37.6173);
-                    }
-                );
-            } else {
-                findRealMedicalFacilities(map, 55.7558, 37.6173);
-            }
-        }
-        
-        // Поиск реальных медицинских учреждений через Overpass API
-        function findRealMedicalFacilities(map, lat, lng) {
-            const radius = 5000; // 5 км радиус поиска
-            
-            // Overpass API запрос для поиска медицинских учреждений
-            const overpassQuery = `
-                [out:json][timeout:25];
-                (
-                    node["amenity"="hospital"](around:${radius},${lat},${lng});
-                    node["amenity"="clinic"](around:${radius},${lat},${lng});
-                    node["amenity"="doctors"](around:${radius},${lat},${lng});
-                    node["amenity"="dentist"](around:${radius},${lat},${lng});
-                    node["healthcare"="hospital"](around:${radius},${lat},${lng});
-                    node["healthcare"="clinic"](around:${radius},${lat},${lng});
-                );
-                out body;
-            `;
-            
-            const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
-            
-            // Показываем индикатор загрузки
-            const loadingPopup = L.popup()
-                .setLatLng([lat, lng])
-                .setContent('<div class="text-center"><i class="fas fa-spinner fa-spin"></i><br>Ищем медицинские учреждения...</div>')
-                .openOn(map);
-            
-            // Делаем запрос к Overpass API
-            fetch(overpassUrl)
-                .then(response => response.json())
-                .then(data => {
-                    // Закрываем индикатор загрузки
-                    map.closePopup(loadingPopup);
-                    
-                    if (data.elements && data.elements.length > 0) {
-                        addRealFacilitiesToMap(map, data.elements, lat, lng);
-                    } else {
-                        // Если не найдено реальных учреждений, показываем информационное сообщение
-                        L.popup()
-                            .setLatLng([lat, lng])
-                            .setContent(`
-                                <div class="text-center">
-                                    <i class="fas fa-info-circle text-warning"></i>
-                                    <br><strong>Медицинские учреждения не найдены</strong>
-                                    <br><small>Попробуйте увеличить масштаб карты или поискать вручную</small>
-                                    <br><button class="btn btn-sm btn-primary mt-2" onclick="openMedicalSearch()">
-                                        <i class="fas fa-search me-1"></i>Поиск вручную
-                                    </button>
-                                </div>
-                            `)
-                            .openOn(map);
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка поиска учреждений:', error);
-                    map.closePopup(loadingPopup);
-                    showManualSearchOption(map, lat, lng);
-                });
-        }
-        
-        // Добавление реальных учреждений на карту
-        function addRealFacilitiesToMap(map, facilities, userLat, userLng) {
-            let foundCount = 0;
-            
-            facilities.forEach(facility => {
-                if (facility.lat && facility.lon) {
-                    foundCount++;
-                    
-                    const facilityName = facility.tags.name || 'Медицинское учреждение';
-                    const facilityType = getFacilityTypeFromTags(facility.tags);
-                    
-                    // Создаем кастомную иконку в зависимости от типа
-                    const iconConfig = getIconForFacilityType(facilityType);
-                    
-                    const customIcon = L.divIcon({
-                        html: `<div style="background-color: ${iconConfig.color}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-                                 <i class="fas fa-${iconConfig.icon}"></i>
-                               </div>`,
-                        className: 'medical-facility-icon',
-                        iconSize: [32, 32],
-                        iconAnchor: [16, 16]
-                    });
-                    
-                    // Добавляем маркер на карту
-                    L.marker([facility.lat, facility.lon], {icon: customIcon})
-                        .addTo(map)
-                        .bindPopup(`
-                            <div style="min-width: 200px;">
-                                <h6 class="mb-2">${facilityName}</h6>
-                                <p class="mb-1"><small><strong>Тип:</strong> ${iconConfig.name}</small></p>
-                                ${facility.tags['addr:street'] ? `<p class="mb-2"><small><strong>Адрес:</strong> ${facility.tags['addr:street']}${facility.tags['addr:housenumber'] ? ', ' + facility.tags['addr:housenumber'] : ''}</small></p>` : ''}
-                                <div class="d-grid gap-1">
-                                    <button class="btn btn-sm btn-primary" onclick="openNavigation(${facility.lat}, ${facility.lon})">
-                                        <i class="fas fa-directions me-1"></i>Построить маршрут
-                                    </button>
-                                </div>
-                            </div>
-                        `);
-                }
-            });
-            
-            // Показываем сообщение о количестве найденных учреждений
-            if (foundCount > 0) {
-                L.popup()
-                    .setLatLng([userLat, userLng])
-                    .setContent(`<div class="text-center"><i class="fas fa-check-circle text-success"></i><br>Найдено ${foundCount} медицинских учреждений</div>`)
-                    .openOn(map);
-            }
-        }
-        
-        // Определение типа учреждения по тегам
-        function getFacilityTypeFromTags(tags) {
-            if (tags.amenity === 'hospital' || tags.healthcare === 'hospital') return 'hospital';
-            if (tags.amenity === 'clinic' || tags.healthcare === 'clinic') return 'clinic';
-            if (tags.amenity === 'doctors') return 'doctors';
-            if (tags.amenity === 'dentist') return 'dentist';
-            return 'medical';
-        }
-        
-        // Получение иконки для типа учреждения
-        function getIconForFacilityType(type) {
-            const types = {
-                'hospital': { icon: 'hospital', color: '#dc3545', name: 'Больница' },
-                'clinic': { icon: 'clinic-medical', color: '#28a745', name: 'Поликлиника' },
-                'doctors': { icon: 'user-md', color: '#17a2b8', name: 'Врач' },
-                'dentist': { icon: 'tooth', color: '#6f42c1', name: 'Стоматология' },
-                'medical': { icon: 'first-aid', color: '#fd7e14', name: 'Мед. учреждение' }
-            };
-            return types[type] || types['medical'];
-        }
-        
-        // Функции для действий
-        function openNavigation(lat, lng) {
-            // Открывает маршрут в Google Maps или Яндекс.Картах
-            if (navigator.userAgent.match(/iPhone|iPad|iPod|Android/i)) {
-                window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`);
-            } else {
-                window.open(`https://yandex.ru/maps/?rtext=~${lat},${lng}&rtt=auto`);
-            }
-        }
-        
-        function openMedicalSearch() {
-            window.open('https://yandex.ru/maps/?text=медицинские+учреждения', '_blank');
-        }
-        
-        function showManualSearchOption(map, lat, lng) {
-            L.popup()
-                .setLatLng([lat, lng])
-                .setContent(`
-                    <div class="text-center">
-                        <i class="fas fa-search text-info"></i>
-                        <br><strong>Поиск медицинских учреждений</strong>
-                        <br><small>Используйте поиск для ручного поиска</small>
-                        <br>
-                        <div class="d-grid gap-1 mt-2">
-                            <button class="btn btn-sm btn-primary" onclick="openMedicalSearch()">
-                                <i class="fas fa-map-marked-alt me-1"></i>Найти на карте
+                <!-- Блок с кнопками действий -->
+                <div class="text-center mt-4 disease-actions">
+                    <div class="row g-2 justify-content-center">
+                        <!-- Кнопка для новой диагностики -->
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <a href="{% url 'home' %}" class="btn btn-primary w-100 py-3">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Новая диагностика
+                            </a>
+                        </div>
+                        <!-- Кнопка для сохранения информации -->
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <button class="btn btn-outline-primary w-100 py-3" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i>
+                                Сохранить информацию
                             </button>
                         </div>
                     </div>
-                `)
+                </div>
+            </div>
+
+            <!-- Важное предупреждение для пользователей -->
+            <div class="alert alert-danger text-center">
+                <h5>
+                    <i class="fas fa-exclamation-triangle me-2"></i>Важная информация
+                </h5>
+                <p class="mb-0">
+                    Данная информация носит ознакомительный характер. Для точной диагностики и лечения
+                    обязательно обратитесь к квалифицированному медицинскому специалисту.
+                    Не занимайтесь самолечением.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Подключение библиотек для карты -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Основная функция инициализации карты
+    function initMap() {
+        // Создание карты с центром в Москве по умолчанию
+        const map = L.map('medicalMap').setView([55.7558, 37.6173], 13);
+        
+        // Добавление нейтральных картографических плиток
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: ''
+        }).addTo(map);
+
+        // Отключение атрибуции карты
+        map.attributionControl.setPrefix('');
+
+        // Попытка получить геолокацию пользователя
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    // Центрирование карты на местоположении пользователя
+                    map.setView([userLat, userLng], 14);
+                    
+                    // Добавление маркера местоположения пользователя
+                    L.marker([userLat, userLng])
+                        .addTo(map)
+                        .bindPopup('<div class="text-center"><strong>Ваше местоположение</strong><br><small>Ищем ближайшие медицинские учреждения...</small></div>')
+                        .openPopup();
+                    
+                    // Поиск медицинских учреждений вокруг пользователя
+                    findRealMedicalFacilities(map, userLat, userLng);
+                },
+                function(error) {
+                    // В случае ошибки геолокации используем Москву по умолчанию
+                    findRealMedicalFacilities(map, 55.7558, 37.6173);
+                }
+            );
+        } else {
+            // Если геолокация не поддерживается, используем Москву по умолчанию
+            findRealMedicalFacilities(map, 55.7558, 37.6173);
+        }
+    }
+    
+    // Функция поиска медицинских учреждений через Overpass API
+    function findRealMedicalFacilities(map, lat, lng) {
+        const radius = 5000; // Радиус поиска 5 км
+        
+        // Запрос к Overpass API для поиска медицинских учреждений
+        const overpassQuery = `
+            [out:json][timeout:25];
+            (
+                node["amenity"="hospital"](around:${radius},${lat},${lng});
+                node["amenity"="clinic"](around:${radius},${lat},${lng});
+                node["amenity"="doctors"](around:${radius},${lat},${lng});
+                node["amenity"="dentist"](around:${radius},${lat},${lng});
+                node["healthcare"="hospital"](around:${radius},${lat},${lng});
+                node["healthcare"="clinic"](around:${radius},${lat},${lng});
+            );
+            out body;
+        `;
+        
+        const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
+        
+        // Показ индикатора загрузки
+        const loadingPopup = L.popup()
+            .setLatLng([lat, lng])
+            .setContent('<div class="text-center"><i class="fas fa-spinner fa-spin"></i><br>Ищем медицинские учреждения...</div>')
+            .openOn(map);
+        
+        // Выполнение запроса к Overpass API
+        fetch(overpassUrl)
+            .then(response => response.json())
+            .then(data => {
+                // Закрытие индикатора загрузки
+                map.closePopup(loadingPopup);
+                
+                if (data.elements && data.elements.length > 0) {
+                    addRealFacilitiesToMap(map, data.elements, lat, lng);
+                } else {
+                    // Сообщение если учреждения не найдены
+                    L.popup()
+                        .setLatLng([lat, lng])
+                        .setContent(`
+                            <div class="text-center">
+                                <i class="fas fa-info-circle text-warning"></i>
+                                <br><strong>Медицинские учреждения не найдены</strong>
+                                <br><small>Попробуйте увеличить масштаб карты или поискать вручную</small>
+                                <br><button class="btn btn-sm btn-primary mt-2" onclick="openMedicalSearch()">
+                                    <i class="fas fa-search me-1"></i>Поиск вручную
+                                </button>
+                            </div>
+                        `)
+                        .openOn(map);
+                }
+            })
+            .catch(error => {
+                // Обработка ошибки поиска
+                map.closePopup(loadingPopup);
+                showManualSearchOption(map, lat, lng);
+            });
+    }
+    
+    // Функция добавления найденных учреждений на карту
+    function addRealFacilitiesToMap(map, facilities, userLat, userLng) {
+        let foundCount = 0;
+        
+        facilities.forEach(facility => {
+            if (facility.lat && facility.lon) {
+                foundCount++;
+                
+                const facilityName = facility.tags.name || 'Медицинское учреждение';
+                const facilityType = getFacilityTypeFromTags(facility.tags);
+                
+                // Создание кастомной иконки для учреждения
+                const iconConfig = getIconForFacilityType(facilityType);
+                
+                const customIcon = L.divIcon({
+                    html: `<div style="background-color: ${iconConfig.color}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                             <i class="fas fa-${iconConfig.icon}"></i>
+                           </div>`,
+                    className: 'medical-facility-icon',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+                
+                // Добавление маркера учреждения на карту
+                L.marker([facility.lat, facility.lon], {icon: customIcon})
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="min-width: 200px;">
+                            <h6 class="mb-2">${facilityName}</h6>
+                            <p class="mb-1"><small><strong>Тип:</strong> ${iconConfig.name}</small></p>
+                            ${facility.tags['addr:street'] ? `<p class="mb-2"><small><strong>Адрес:</strong> ${facility.tags['addr:street']}${facility.tags['addr:housenumber'] ? ', ' + facility.tags['addr:housenumber'] : ''}</small></p>` : ''}
+                            <div class="d-grid gap-1">
+                                <button class="btn btn-sm btn-primary" onclick="openNavigation(${facility.lat}, ${facility.lon})">
+                                    <i class="fas fa-directions me-1"></i>Построить маршрут
+                                </button>
+                            </div>
+                        </div>
+                    `);
+            }
+        });
+        
+        // Показ сообщения о количестве найденных учреждений
+        if (foundCount > 0) {
+            L.popup()
+                .setLatLng([userLat, userLng])
+                .setContent(`<div class="text-center"><i class="fas fa-check-circle text-success"></i><br>Найдено ${foundCount} медицинских учреждений</div>`)
                 .openOn(map);
         }
-        
-        // Инициализируем карту после загрузки страницы
-        document.addEventListener('DOMContentLoaded', initMap);
-    </script>
-</body>
-</html>
+    }
+    
+    // Функция определения типа учреждения по тегам OpenStreetMap
+    function getFacilityTypeFromTags(tags) {
+        if (tags.amenity === 'hospital' || tags.healthcare === 'hospital') return 'hospital';
+        if (tags.amenity === 'clinic' || tags.healthcare === 'clinic') return 'clinic';
+        if (tags.amenity === 'doctors') return 'doctors';
+        if (tags.amenity === 'dentist') return 'dentist';
+        return 'medical';
+    }
+    
+    // Функция получения конфигурации иконки для типа учреждения
+    function getIconForFacilityType(type) {
+        const types = {
+            'hospital': { icon: 'hospital', color: '#dc3545', name: 'Больница' },
+            'clinic': { icon: 'clinic-medical', color: '#28a745', name: 'Поликлиника' },
+            'doctors': { icon: 'user-md', color: '#17a2b8', name: 'Врач' },
+            'dentist': { icon: 'tooth', color: '#6f42c1', name: 'Стоматология' },
+            'medical': { icon: 'first-aid', color: '#fd7e14', name: 'Мед. учреждение' }
+        };
+        return types[type] || types['medical'];
+    }
+    
+    // Функция открытия маршрута в навигационном приложении
+    function openNavigation(lat, lng) {
+        if (navigator.userAgent.match(/iPhone|iPad|iPod|Android/i)) {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`);
+        } else {
+            window.open(`https://yandex.ru/maps/?rtext=~${lat},${lng}&rtt=auto`);
+        }
+    }
+    
+    // Функция открытия поиска медицинских учреждений вручную
+    function openMedicalSearch() {
+        window.open('https://yandex.ru/maps/?text=медицинские+учреждения', '_blank');
+    }
+    
+    // Функция показа опции ручного поиска
+    function showManualSearchOption(map, lat, lng) {
+        L.popup()
+            .setLatLng([lat, lng])
+            .setContent(`
+                <div class="text-center">
+                    <i class="fas fa-search text-info"></i>
+                    <br><strong>Поиск медицинских учреждений</strong>
+                    <br><small>Используйте поиск для ручного поиска</small>
+                    <br>
+                    <div class="d-grid gap-1 mt-2">
+                        <button class="btn btn-sm btn-primary" onclick="openMedicalSearch()">
+                            <i class="fas fa-map-marked-alt me-1"></i>Найти на карте
+                        </button>
+                    </div>
+                </div>
+            `)
+            .openOn(map);
+    }
+    
+    // Инициализация карты после загрузки страницы
+    document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}

@@ -32,16 +32,30 @@ def load_symptoms():
     return []
 
 
+# Глобальные переменные для отслеживания состояния системы
+model = None
+symptoms_list = []
+diseases_list = []
+model_loaded_successfully = False
+model_error_message = ""
+
+
 # Инициализация ML-модели и данных при запуске приложения
 try:
     model = joblib.load(settings.ML_MODEL_PATH)
     symptoms_list = load_symptoms()
     diseases_list = model.classes_.tolist()
+    model_loaded_successfully = True
+    model_error_message = ""
+    
 except Exception as e:
     # В случае ошибки загрузки модели инициализируем пустые структуры
     model = None
     symptoms_list = load_symptoms()
     diseases_list = []
+    model_loaded_successfully = False
+    model_error_message = "система диагностики временно недоступна"
+
 
 
 def home(request):
@@ -49,16 +63,17 @@ def home(request):
     Главная страница приложения.
     
     Отображает форму для выбора симптомов и основную информацию о системе.
+    Если модель не загружена, показывает предупреждение.
     """
-    return render(
-        request,
-        "diagnosis/home.html",
-        {
-            "symptoms": symptoms_list,
-            "symptoms_count": len(symptoms_list),
-            "diseases_count": len(diseases_list) if diseases_list else 0,
-        },
-    )
+    context = {
+        "symptoms": symptoms_list,
+        "symptoms_count": len(symptoms_list),
+        "diseases_count": len(diseases_list) if diseases_list else 0,
+        "model_loaded": model_loaded_successfully,
+        "model_error": model_error_message,
+    }
+    
+    return render(request, "diagnosis/home.html", context)
 
 
 def predict(request):
@@ -71,6 +86,7 @@ def predict(request):
     Returns:
         HttpResponse: Страница с результатами или ошибкой
     """
+    
     if request.method == "POST" and model is not None:
         try:
             # Получаем список выбранных симптомов из формы

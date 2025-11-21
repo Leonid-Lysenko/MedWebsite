@@ -96,6 +96,29 @@
         font-weight: 500;
         color: #495057;
     }
+    
+    /* Стили для статуса системы */
+    .system-status {
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    
+    .status-online {
+        background-color: #28a745;
+    }
+    
+    .status-offline {
+        background-color: #dc3545;
+    }
 </style>
 {% endblock %}
 
@@ -130,7 +153,9 @@
                 </div>
                 <div class="col-md-4 mb-3">
                     <div class="text-white">
-                        <div class="stat-number">ML</div>
+                        <div class="stat-number">
+                            ML
+                        </div>
                         <p class="mb-0">Машинное обучение</p>
                     </div>
                 </div>
@@ -150,9 +175,32 @@
                 </p>
             </div>
 
+            <!-- Статус системы  -->
+            <div class="system-status {% if model_loaded %}alert alert-success{% else %}alert alert-danger{% endif %}">
+                <div class="d-flex align-items-center">
+                    <span class="status-indicator {% if model_loaded %}status-online{% else %}status-offline{% endif %}"></span>
+                    <strong>Статус системы:</strong>
+                    <span class="ms-2">
+                        {% if model_loaded %}
+                        ML-модель загружена и готова к работе
+                        {% else %}
+                        ML-модель не загружена: {{ model_error }}
+                        {% endif %}
+                    </span>
+                </div>
+                {% if not model_loaded %}
+                <div class="mt-2">
+                    <small>
+                        <i class="fas fa-info-circle me-1"></i>
+                        В демонстрационном режиме доступен только просмотр
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+
             <!-- Основная карточка с формой ввода симптомов -->
             <div class="medical-card p-4 p-md-5 mb-4">
-                <form method="POST" action="{% url 'predict' %}">
+                <form method="POST" action="{% url 'predict' %}" {% if not model_loaded %}onsubmit="alert('ML-модель не загружена. Диагностика временно недоступна.'); return false;"{% endif %}>
                     {% csrf_token %}
 
                     <!-- Блок поиска симптомов -->
@@ -172,11 +220,13 @@
                                 id="symptomSearch"
                                 class="form-control"
                                 placeholder="Начните вводить название симптома..."
+                                {% if not model_loaded %}disabled{% endif %}
                             />
                             <button
                                 class="btn btn-outline-secondary"
                                 type="button"
                                 id="clearSearch"
+                                {% if not model_loaded %}disabled{% endif %}
                             >
                                 <i class="fas fa-times"></i> Очистить
                             </button>
@@ -209,6 +259,7 @@
                                 class="btn btn-sm btn-outline-success"
                                 id="clearAllSymptoms"
                                 type="button"
+                                {% if not model_loaded %}disabled{% endif %}
                             >
                                 <i class="fas fa-times me-1"></i>Очистить все
                             </button>
@@ -227,6 +278,7 @@
                             <button
                                 type="submit"
                                 class="btn btn-medical text-white px-4 py-3"
+                                {% if not model_loaded %}disabled{% endif %}
                             >
                                 <i class="fas fa-search me-2"></i>
                                 Анализировать выбранные симптомы (<span class="symptom-count">0</span>)
@@ -239,7 +291,11 @@
                         <!-- Информационное сообщение -->
                         <div class="alert alert-info mb-4">
                             <i class="fas fa-info-circle me-2"></i>
+                            {% if model_loaded %}
                             Модель проанализирует выбранные симптомы и определит наиболее вероятные заболевания
+                            {% else %}
+                            <strong>Демонстрационный режим:</strong> ML-модель временно недоступна
+                            {% endif %}
                         </div>
 
                         <!-- Сетка симптомов -->
@@ -254,6 +310,7 @@
                                         value="{{ symptom }}"
                                         id="symptom{{ forloop.counter }}"
                                         data-symptom="{{ symptom|lower }}"
+                                        {% if not model_loaded %}disabled{% endif %}
                                     />
                                     <label
                                         class="form-check-label w-100"
@@ -269,7 +326,7 @@
                             <div class="col-12">
                                 <div class="alert alert-warning text-center">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Симптомы не загружены. Проверьте загрузку ML модели.
+                                    Симптомы не загружены
                                 </div>
                             </div>
                             {% endfor %}
@@ -302,7 +359,7 @@
 
                     <!-- Основная кнопка отправки формы -->
                     <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-medical text-white px-5 py-3">
+                        <button type="submit" class="btn btn-medical text-white px-5 py-3" {% if not model_loaded %}disabled{% endif %}>
                             <i class="fas fa-search me-2"></i>
                             Анализировать выбранные симптомы (<span class="symptom-count">0</span>)
                         </button>
@@ -336,6 +393,11 @@
         initializePagination();
         setupEventListeners();
         updateSelectedCount();
+        
+        // Простая отладочная информация
+        console.log('Система диагностики инициализирована');
+        console.log('Загружено симптомов:', allSymptoms.length);
+        console.log('Выбрано симптомов:', selectedSymptoms.size);
     });
 
     // Инициализация пагинации симптомов

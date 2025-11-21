@@ -50,11 +50,8 @@
         </div>
     </nav>
 
-    <!-- Отступ для фиксированной навигации -->
-    <div style="padding-top: 80px;"></div>
-
     <!-- Основное содержимое страницы -->
-    <main>
+    <main class="{% block main_class %}main-content{% endblock %}">
         {% block content %}
         {% endblock %}
     </main>

@@ -3,6 +3,8 @@
 
 {% block title %}О нас - Медицинский диагностический помощник{% endblock %}
 
+{% block main_class %}animated-bg{% endblock %}
+
 {% block extra_css %}
 <style>
     /* Анимированный градиентный фон */
@@ -17,7 +19,6 @@
         background-size: 400% 400%;
         animation: gradientShift 15s ease infinite;
         min-height: 100vh;
-        padding-top: 80px; /* Добавляем отступ для навигации */
     }
     
     .medical-card {

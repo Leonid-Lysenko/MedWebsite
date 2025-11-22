@@ -1,0 +1,43 @@
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  | \.git
+  | \.venv
+  | venv
+  | static
+  | templates
+  | migrations
+  | __pycache__
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["diagnosis"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203, W503, E501, F401, F841"
+exclude = [
+    ".git",
+    "__pycache__",
+    "*.pyc", 
+    ".venv",
+    "venv",
+    "migrations",
+    "static",
+    "templates",
+    "backend/static",
+    "backend/templates"
+]
+per-file-ignores = [
+    "*/migrations/*:F401",
+    "*/settings.py:F401",
+    "diagnosis/disease_data.py:E501"
+]

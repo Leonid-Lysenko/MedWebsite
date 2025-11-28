@@ -38,7 +38,6 @@ staticfiles/
 
 # ML модели
 ml/models/*.pkl
-ml/models/*.joblib
 ml/models/*.h5
 ml/models/*.pth
 !ml/models/.gitkeep

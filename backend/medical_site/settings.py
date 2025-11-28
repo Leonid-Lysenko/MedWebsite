@@ -25,15 +25,12 @@ ML_MODEL_PATH = BASE_DIR.parent / "ml/models/lr_model_full_data.joblib"
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY', 
-    'django-insecure-development-key-123'
-)
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-development-key-123")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
 
 
 # Application definition

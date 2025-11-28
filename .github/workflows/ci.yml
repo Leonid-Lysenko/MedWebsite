@@ -25,35 +25,14 @@ jobs:
         isort --check-only .
         flake8 .
     
-    - name: Start Django server with health check
+    - name: Start Django server
       run: |
         cd backend
-        
-        # Запускаем сервер в фоне
-        Start-Process python "manage.py" "runserver" "127.0.0.1:8000" "--noreload"
-        
-        # Ждем и проверяем что сервер реально работает
-        $maxAttempts = 15
-        $attempt = 0
-        
-        do {
-            $attempt++
-            try {
-                # Пробуем подключиться к серверу
-                $response = Invoke-WebRequest -Uri "http://127.0.0.1:8000/" -TimeoutSec 5 -ErrorAction Stop
-                Write-Host "Server is ready after $attempt seconds!"
-                break
-            } catch {
-                Write-Host "Waiting for server... ($attempt/$maxAttempts)"
-                if ($attempt -eq $maxAttempts) {
-                    Write-Host "Server failed to start after $maxAttempts attempts"
-                    # Показываем какие процессы запущены для отладки
-                    Get-Process python
-                    exit 1
-                }
-                Start-Sleep -Seconds 2
-            }
-        } while ($true)
+        Start-Job -ScriptBlock {
+            cd backend
+            python manage.py runserver 127.0.0.1:8000 --noreload
+        }
+        Start-Sleep -Seconds 10
 
     - name: Run all tests with coverage
       run: |

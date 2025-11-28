@@ -25,6 +25,13 @@ jobs:
         isort --check-only .
         flake8 .
     
+    - name: Start Django server
+      run: |
+        cd backend
+        python manage.py runserver 127.0.0.1:8000 &
+        # Ждем 15 секунд чтобы сервер успел запуститься
+        Start-Sleep -Seconds 15
+
     - name: Run all tests with coverage
       run: |
         cd backend

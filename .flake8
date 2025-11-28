@@ -1,0 +1,19 @@
+# .flake8
+[flake8]
+max-line-length = 88
+ignore = E203, W503, E501, F401, F841, E722
+exclude = 
+    .git,
+    __pycache__,
+    *.pyc,
+    .venv,
+    venv,
+    migrations,
+    static,
+    templates,
+    backend/static,
+    backend/templates
+per-file-ignores = 
+    */migrations/*:F401,
+    */settings.py:F401,
+    diagnosis/disease_data.py:E501

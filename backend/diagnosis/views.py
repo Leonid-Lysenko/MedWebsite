@@ -13,14 +13,12 @@ from .disease_data import get_disease_info
 def load_symptoms():
     """
     Загружает список симптомов из текстового файла.
-    
+
     Returns:
         list: Список симптомов или пустой список в случае ошибки
     """
     try:
-        symptoms_file = os.path.join(
-            os.path.dirname(__file__), "translated_columns_list.txt"
-        )
+        symptoms_file = os.path.join(os.path.dirname(__file__), "translated_columns_list.txt")
         if os.path.exists(symptoms_file):
             with open(symptoms_file, "r", encoding="utf-8") as f:
                 symptoms = [line.strip() for line in f if line.strip()]
@@ -47,7 +45,7 @@ try:
     diseases_list = model.classes_.tolist()
     model_loaded_successfully = True
     model_error_message = ""
-    
+
 except Exception as e:
     # В случае ошибки загрузки модели инициализируем пустые структуры
     model = None
@@ -57,11 +55,10 @@ except Exception as e:
     model_error_message = "система диагностики временно недоступна"
 
 
-
 def home(request):
     """
     Главная страница приложения.
-    
+
     Отображает форму для выбора симптомов и основную информацию о системе.
     Если модель не загружена, показывает предупреждение.
     """
@@ -72,21 +69,21 @@ def home(request):
         "model_loaded": model_loaded_successfully,
         "model_error": model_error_message,
     }
-    
+
     return render(request, "diagnosis/home.html", context)
 
 
 def predict(request):
     """
     Обработчик предсказания заболевания на основе выбранных симптомов.
-    
+
     Args:
         request: HTTP-запрос с выбранными симптомами
-        
+
     Returns:
         HttpResponse: Страница с результатами или ошибкой
     """
-    
+
     if request.method == "POST" and model is not None:
         try:
             # Получаем список выбранных симптомов из формы
@@ -126,7 +123,7 @@ def predict(request):
                     {
                         "disease": disease_name,
                         "probability": probability,
-                        "percentage": f"{probability*100:.2f}%",
+                        "percentage": f"{probability * 100:.2f}%",
                         "description": get_disease_description(disease_name),
                         "treatment": get_disease_treatment(disease_name),
                     }
@@ -167,10 +164,10 @@ def how_to_use(request):
 def get_disease_description(disease_name):
     """
     Возвращает описание заболевания из базы знаний.
-    
+
     Args:
         disease_name (str): Название заболевания
-        
+
     Returns:
         str: Описание заболевания
     """
@@ -181,10 +178,10 @@ def get_disease_description(disease_name):
 def get_disease_treatment(disease_name):
     """
     Возвращает рекомендации по лечению заболевания из базы знаний.
-    
+
     Args:
         disease_name (str): Название заболевания
-        
+
     Returns:
         str: Рекомендации по лечению
     """
@@ -195,10 +192,10 @@ def get_disease_treatment(disease_name):
 def get_disease_suggestions(searched_name):
     """
     Возвращает список похожих названий заболеваний для подсказок при поиске.
-    
+
     Args:
         searched_name (str): Искомое название заболевания
-        
+
     Returns:
         list: Список похожих названий
     """
@@ -217,11 +214,11 @@ def get_disease_suggestions(searched_name):
 def disease_detail(request, disease_name):
     """
     Отображает детальную страницу информации о заболевании.
-    
+
     Args:
         request: HTTP-запрос
         disease_name (str): Название заболевания
-        
+
     Returns:
         HttpResponse: Страница с детальной информацией или страница "не найдено"
     """
@@ -231,9 +228,7 @@ def disease_detail(request, disease_name):
     is_from_knowledge_base = "knowledge-base/disease" in request.path
 
     # Проверяем, есть ли информация о заболевании в базе знаний
-    is_unknown_disease = disease_info["description"].startswith(
-        "Информация о заболевании"
-    )
+    is_unknown_disease = disease_info["description"].startswith("Информация о заболевании")
 
     if is_unknown_disease:
         # Если заболевание не найдено, показываем страницу с подсказками
@@ -271,7 +266,7 @@ def disease_detail(request, disease_name):
 def knowledge_base(request):
     """
     Отображает страницу базы знаний со всеми заболеваниями.
-    
+
     Группирует заболевания по алфавиту для удобной навигации.
     """
     # Получаем все заболевания из ML-модели
@@ -304,20 +299,17 @@ def knowledge_base(request):
     return render(
         request,
         "diagnosis/knowledge_base.html",
-        {
-            "diseases_by_letter": diseases_by_letter, 
-            "total_diseases": len(all_diseases)
-        },
+        {"diseases_by_letter": diseases_by_letter, "total_diseases": len(all_diseases)},
     )
 
 
 def get_severity_display(severity):
     """
     Преобразует код серьезности заболевания в читаемое представление.
-    
+
     Args:
         severity (str): Код серьезности ('high', 'medium', 'low', etc.)
-        
+
     Returns:
         str: Текстовое представление серьезности
     """

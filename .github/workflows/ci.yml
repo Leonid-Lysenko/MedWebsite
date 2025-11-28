@@ -24,15 +24,6 @@ jobs:
         black --check .
         isort --check-only .
         flake8 .
-    
-    - name: Start Django server
-      run: |
-        cd backend
-        Start-Job -ScriptBlock {
-            cd backend
-            python manage.py runserver 127.0.0.1:8000 --noreload
-        }
-        Start-Sleep -Seconds 10
 
     - name: Run tests (skip E2E)
       run: |

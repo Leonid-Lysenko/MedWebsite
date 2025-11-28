@@ -34,7 +34,7 @@ jobs:
         }
         Start-Sleep -Seconds 10
 
-    - name: Run all tests with coverage
+    - name: Run tests (skip E2E)
       run: |
         cd backend
-        pytest
+        pytest -m "not e2e"

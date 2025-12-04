@@ -169,6 +169,116 @@ def test_home_view_contains_keywords(client):
     assert "симптом" in content.lower() or "диагност" in content.lower()
 
 
+@pytest.mark.unit
+@patch("diagnosis.views.render")
+@patch("diagnosis.views.symptoms_list")
+@patch("diagnosis.views.diseases_list")
+@patch("diagnosis.views.model_loaded_successfully")
+def test_home_view_with_symptoms_by_letter(
+    mock_model_loaded, mock_diseases_list, mock_symptoms_list, mock_render, mock_symptoms_list_fixture, factory
+):
+    """Тест home view с группировкой симптомов по буквам.
+
+    Проверяет:
+    1. Что symptoms_by_letter существует в контексте
+    2. Что симптомы правильно группируются по первой букве
+    3. Что группы сортируются по алфавиту
+    """
+    # Arrange
+    mock_symptoms_list.return_value = mock_symptoms_list_fixture
+    mock_diseases_list.return_value = ["Грипп", "Простуда", "COVID-19"]
+    mock_model_loaded.return_value = True
+
+    # Создаем мок для render, который возвращает HttpResponse
+    mock_response = Mock()
+    mock_render.return_value = mock_response
+
+    request = factory.get("/")
+
+    # Act
+    with patch("diagnosis.views.symptoms_list", mock_symptoms_list_fixture):
+        response = home(request)
+
+    # Assert
+    # Проверяем что render был вызван с правильными аргументами
+    mock_render.assert_called_once()
+
+    # Получаем контекст, который был передан в render
+    call_args = mock_render.call_args
+    request_arg, template_arg, context_arg = call_args[0]
+
+    # Проверяем контекст
+    assert "symptoms" in context_arg
+    assert isinstance(context_arg["symptoms"], list)
+
+    # Новое поле для группировки по буквам
+    assert "symptoms_by_letter" in context_arg
+    assert isinstance(context_arg["symptoms_by_letter"], dict)
+
+    # Проверяем что симптомы сгруппированы
+    symptoms_by_letter = context_arg["symptoms_by_letter"]
+    assert len(symptoms_by_letter) > 0
+
+    # Проверяем что буквы отсортированы
+    letters = list(symptoms_by_letter.keys())
+    assert letters == sorted(letters)
+
+    # Проверяем что симптомы внутри групп отсортированы
+    for letter, symptoms in symptoms_by_letter.items():
+        assert symptoms == sorted(symptoms)
+
+    # Проверяем что общее количество симптомов совпадает
+    total_symptoms_in_groups = sum(len(symptoms) for symptoms in symptoms_by_letter.values())
+    assert total_symptoms_in_groups == len(mock_symptoms_list_fixture)
+
+
+@pytest.mark.unit
+@patch("diagnosis.views.render")
+@patch("diagnosis.views.symptoms_list")
+def test_home_view_symptoms_grouping_logic(mock_symptoms_list, mock_render, mock_symptoms_with_special_chars, factory):
+    """Тест логики группировки симптомов.
+
+    Проверяет:
+    1. Что русские буквы группируются правильно
+    2. Что цифры и специальные символы группируются в '#'
+    3. Что первая буква берется в верхнем регистре
+    """
+    # Arrange
+    mock_symptoms_list.return_value = mock_symptoms_with_special_chars
+
+    # Создаем мок для render
+    mock_response = Mock()
+    mock_render.return_value = mock_response
+
+    request = factory.get("/")
+
+    # Act
+    with patch("diagnosis.views.symptoms_list", mock_symptoms_with_special_chars):
+        with patch("diagnosis.views.diseases_list", []):
+            with patch("diagnosis.views.model_loaded_successfully", True):
+                response = home(request)
+
+    # Assert
+    # Проверяем что render был вызван
+    mock_render.assert_called_once()
+
+    # Получаем контекст, который был передан в render
+    call_args = mock_render.call_args
+    context_arg = call_args[0][2]  # третий аргумент - контекст
+
+    # Проверяем наличие группы для специальных символов
+    assert "#" in context_arg["symptoms_by_letter"]
+
+    # Проверяем что симптомы с цифрами попали в группу '#'
+    hash_group = context_arg["symptoms_by_letter"].get("#", [])
+    assert any(any(char.isdigit() for char in symptom) for symptom in hash_group)
+
+    # Проверяем что обычные симптомы сгруппированы по буквам
+    assert "А" in context_arg["symptoms_by_letter"]
+    assert "Б" in context_arg["symptoms_by_letter"]
+    assert "Г" in context_arg["symptoms_by_letter"]
+
+
 # ===== Тесты predict view =====
 
 
@@ -260,13 +370,22 @@ def test_disease_detail_different_sources(client, disease_paths):
 @pytest.mark.unit
 def test_empty_input_vector_creation():
     """Тест создания пустого вектора симптомов."""
-    assert True
+    # Arrange (подготовка)
+    symptoms_list = ["Кашель", "Температура", "Головная боль"]
+    selected_symptoms = []  # Пустой список симптомов
 
+    # Act (действие) - имитируем логику из views.py
+    input_vector = np.zeros(len(symptoms_list))
 
-@pytest.mark.unit
-def test_predict_with_unknown_symptoms():
-    """Тест predict с неизвестными симптомами."""
-    assert True
+    for symptom in selected_symptoms:
+        if symptom in symptoms_list:
+            idx = symptoms_list.index(symptom)
+            input_vector[idx] = 1
+
+    # Assert (проверка)
+    expected_vector = np.zeros(len(symptoms_list))
+    np.testing.assert_array_equal(input_vector, expected_vector)
+    assert np.sum(input_vector) == 0  # Все элементы должны быть 0
 
 
 # ===== Тесты глобальных переменных =====
@@ -428,6 +547,17 @@ def test_model_initialization_exception(mock_joblib):
     assert diagnosis.views.model is None
     assert diagnosis.views.model_loaded_successfully is False
     assert "система диагностики временно недоступна" in diagnosis.views.model_error_message
+
+
+@pytest.mark.unit
+def test_home_page_without_ml_model(client):
+    """Тест главной страницы когда ML модель не загружена"""
+    from django.urls import reverse
+
+    with patch("diagnosis.views.model_loaded_successfully", False):
+        response = client.get(reverse("home"))
+        content = response.content.decode("utf-8")
+        assert "ML-модель не загружена" in content or "демонстрационный режим" in content
 
 
 # ===== Тесты создания вектора симптомов =====

@@ -226,6 +226,7 @@
         const clearSearch = document.getElementById('clearSearch');
         const foundCount = document.getElementById('foundCount');
         const diseaseItems = document.querySelectorAll('.disease-item');
+        const diseaseSections = document.querySelectorAll('.disease-letter-section');
         const alphabetLinks = document.querySelectorAll('.alphabet-nav a');
         const backToTop = document.getElementById('backToTop');
 
@@ -234,6 +235,7 @@
             diseaseSearch.addEventListener('input', function(e) {
                 const searchTerm = e.target.value.toLowerCase().trim();
                 let visibleCount = 0;
+                const foundLetters = new Set();
 
                 // Фильтрация заболеваний по поисковому запросу
                 diseaseItems.forEach(item => {
@@ -241,8 +243,24 @@
                     if (searchTerm === '' || diseaseName.includes(searchTerm)) {
                         item.style.display = 'block';
                         visibleCount++;
+                        // Запоминаем букву, на которой есть результаты
+                        const section = item.closest('.disease-letter-section');
+                        if (section) {
+                            const letter = section.id.replace('letter-', '');
+                            foundLetters.add(letter);
+                        }
                     } else {
                         item.style.display = 'none';
+                    }
+                });
+                
+                // Скрываем буквенные секции, где нет результатов
+                diseaseSections.forEach(section => {
+                    const letter = section.id.replace('letter-', '');
+                    if (searchTerm === '' || foundLetters.has(letter)) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
                     }
                 });
 
@@ -260,9 +278,13 @@
                     diseaseSearch.value = '';
                 }
                 
-                // Показать все заболевания
+                // Показать все заболевания и все секции
                 diseaseItems.forEach(item => {
                     item.style.display = 'block';
+                });
+                
+                diseaseSections.forEach(section => {
+                    section.style.display = 'block';
                 });
                 
                 // Сброс счетчика

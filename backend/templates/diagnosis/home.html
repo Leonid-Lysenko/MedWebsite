@@ -119,6 +119,37 @@
     .status-offline {
         background-color: #dc3545;
     }
+    
+    /* Стили для алфавитной навигации */
+    .alphabet-nav {
+        position: sticky;
+        top: 80px;
+        z-index: 100;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+    }
+    
+    .symptom-letter-section {
+        scroll-margin-top: 120px;
+        margin-bottom: 30px;
+    }
+    
+    /* Бейджи для количества симптомов по буквам */
+    .letter-badge {
+        font-size: 0.8em;
+        padding: 0.25em 0.6em;
+        background: #6c757d;
+        color: white;
+    }
+    
+    /* Кнопки алфавита */
+    .alphabet-btn {
+        min-width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 </style>
 {% endblock %}
 
@@ -133,7 +164,7 @@
                     Медицинский Диагностический Помощник
                 </h1>
                 <p class="lead mb-0">
-                    AI-помощник для предварительной диагностики заболеваний на основе симптомов
+                    Умный помощник для предварительной диагностики заболеваний на основе симптомов
                 </p>
             </div>
 
@@ -235,7 +266,7 @@
                         <!-- Счетчики результатов -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <small class="text-muted" id="searchResultsCount">
-                                Найдено: <span id="foundCount">{{ symptoms|length }}</span> из {{ symptoms|length }} симптомов
+                                Найдено: <span id="foundCount">{{ symptoms_count }}</span> из {{ symptoms_count }} симптомов
                             </small>
                             <small class="text-muted" id="selectedCountBadge">
                                 Выбрано: <span id="selectedCount">0</span>
@@ -298,60 +329,73 @@
                             {% endif %}
                         </div>
 
-                        <!-- Сетка симптомов -->
-                        <div class="row g-3" id="symptoms-grid">
-                            {% for symptom in symptoms %}
-                            <div class="col-md-6 col-lg-4 symptom-item">
-                                <div class="form-check p-3 symptom-checkbox border rounded h-100">
-                                    <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        name="symptoms"
-                                        value="{{ symptom }}"
-                                        id="symptom{{ forloop.counter }}"
-                                        data-symptom="{{ symptom|lower }}"
-                                        {% if not model_loaded %}disabled{% endif %}
-                                    />
-                                    <label
-                                        class="form-check-label w-100"
-                                        for="symptom{{ forloop.counter }}"
-                                        data-original="{{ symptom }}"
-                                    >
-                                        {{ symptom }}
-                                    </label>
-                                </div>
+                        <!-- Алфавитная навигация -->
+                         {% if symptoms_by_letter %}
+                        <div class="alphabet-nav p-3 mb-4 rounded shadow-sm">
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                {% for letter in symptoms_by_letter.keys %}
+                                    <a href="#letter-{{ letter }}" class="btn btn-sm btn-outline-primary">{{ letter }}</a>
+                                {% endfor %}
                             </div>
-                            {% empty %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Сетка симптомов по алфавиту -->
+                        <div id="symptoms-by-alphabet">
+                            {% if symptoms_by_letter %}
+                                {% for letter, letter_symptoms in symptoms_by_letter.items %}
+                                    <div class="symptom-letter-section" id="letter-{{ letter }}">
+                                        <h4 class="text-primary mb-3 border-bottom pb-2">
+                                            <i class="fas fa-file-medical me-2"></i>
+                                            {{ letter }}
+                                            <span class="badge letter-badge ms-2"
+                                                  data-bs-toggle="tooltip"
+                                                  title="Количество симптомов на букву '{{ letter }}': {{ letter_symptoms|length }}">
+                                                {{ letter_symptoms|length }}
+                                            </span>
+                                        </h4>
+                                        
+                                        <!-- Сетка симптомов для текущей буквы -->
+                                        <div class="row g-3 mb-4">
+                                            {% for symptom in letter_symptoms %}
+                                            <div class="col-md-6 col-lg-4 symptom-item" data-letter="{{ letter }}">
+                                                <div class="form-check p-3 symptom-checkbox border rounded h-100">
+                                                    <input
+                                                        class="form-check-input"
+                                                        type="checkbox"
+                                                        name="symptoms"
+                                                        value="{{ symptom }}"
+                                                        id="symptom_{{ letter }}_{{ forloop.counter }}"
+                                                        data-symptom="{{ symptom|lower }}"
+                                                        data-letter="{{ letter }}"
+                                                        {% if not model_loaded %}disabled{% endif %}
+                                                    />
+                                                    <label
+                                                        class="form-check-label w-100"
+                                                        for="symptom_{{ letter }}_{{ forloop.counter }}"
+                                                        data-original="{{ symptom }}"
+                                                    >
+                                                        {{ symptom }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
                             <!-- Сообщение при отсутствии симптомов -->
                             <div class="col-12">
                                 <div class="alert alert-warning text-center">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Симптомы не загружены
+                                    Симптомы не загружены. Приносим извинения за временные неудобства.
                                 </div>
                             </div>
-                            {% endfor %}
-                        </div>
-
-                        <!-- Элементы управления пагинацией -->
-                        <div class="pagination-controls text-center" id="paginationControls">
-                            <button type="button" class="btn btn-outline-primary btn-pagination me-2" id="prevPage" disabled>
-                                <i class="fas fa-chevron-left me-1"></i>Назад
-                            </button>
-                            <span class="mx-3 page-info" id="pageInfo">Страница 1 из 7</span>
-                            <button type="button" class="btn btn-outline-primary btn-pagination ms-2" id="nextPage">
-                                Вперед<i class="fas fa-chevron-right ms-1"></i>
-                            </button>
-                            <div class="mt-2">
-                                <small class="text-muted">Показано <span id="shownCount">45</span> из {{ symptoms|length }} симптомов</small>
-                            </div>
+                            {% endif %}
                         </div>
 
                         <!-- Сообщение при отсутствии результатов поиска -->
-                        <div
-                            class="alert alert-warning text-center mt-4"
-                            id="noResultsMessage"
-                            style="display: none"
-                        >
+                        <div class="alert alert-warning text-center mt-4" id="noResultsMessage" style="display: none">
                             <i class="fas fa-search me-2"></i>
                             Симптомы не найдены. Попробуйте изменить запрос.
                         </div>
@@ -382,50 +426,43 @@
 <script>
     // Глобальные переменные для управления состоянием интерфейса
     let selectedSymptoms = new Set();
-    let allSymptoms = [];
-    let currentPage = 1;
-    const symptomsPerPage = 45;
-    let totalPages = 1;
+    let allSymptomElements = [];
     let currentSearchTerm = '';
 
     // Инициализация при загрузке страницы
     document.addEventListener('DOMContentLoaded', function () {
-        initializePagination();
-        setupEventListeners();
+        initializeEventListeners();
         updateSelectedCount();
         
         // Простая отладочная информация
         console.log('Система диагностики инициализирована');
-        console.log('Загружено симптомов:', allSymptoms.length);
+        console.log('Загружено симптомов:', allSymptomElements.length);
         console.log('Выбрано симптомов:', selectedSymptoms.size);
     });
 
-    // Инициализация пагинации симптомов
-    function initializePagination() {
-        const symptomItems = document.querySelectorAll('.symptom-item');
-        allSymptoms = Array.from(symptomItems);
-        totalPages = Math.ceil(allSymptoms.length / symptomsPerPage);
-        
-        // Скрываем все симптомы и показываем только первую страницу
-        allSymptoms.forEach(item => {
-            item.style.display = 'none';
-        });
-        
-        showPage(1);
-        
-        // Восстанавливаем выбранные симптомы при перезагрузке страницы
-        document.querySelectorAll('input[name="symptoms"]:checked').forEach(checkbox => {
-            selectedSymptoms.add(checkbox.value);
-        });
-        updateSelectedCount();
-    }
-
     // Настройка обработчиков событий
-    function setupEventListeners() {
+    function initializeEventListeners() {
+        // Получаем все элементы симптомов
+        allSymptomElements = document.querySelectorAll('.symptom-item');
+        
+        // Настройка плавной прокрутки для алфавитных кнопок (как в базе знаний)
+        document.querySelectorAll('.alphabet-nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
         // Обработчик поиска симптомов
         document.getElementById('symptomSearch').addEventListener('input', function(e) {
             currentSearchTerm = e.target.value.trim().toLowerCase();
-            currentPage = 1;
             performSearch(currentSearchTerm);
         });
 
@@ -433,27 +470,11 @@
         document.getElementById('clearSearch').addEventListener('click', function() {
             document.getElementById('symptomSearch').value = '';
             currentSearchTerm = '';
-            currentPage = 1;
             performSearch('');
         });
 
         // Обработчик очистки всех выбранных симптомов
         document.getElementById('clearAllSymptoms').addEventListener('click', clearAllSymptoms);
-        
-        // Обработчики пагинации
-        document.getElementById('prevPage').addEventListener('click', function(e) {
-            e.preventDefault();
-            if (currentPage > 1) {
-                showPage(currentPage - 1);
-            }
-        });
-        
-        document.getElementById('nextPage').addEventListener('click', function(e) {
-            e.preventDefault();
-            if (currentPage < totalPages) {
-                showPage(currentPage + 1);
-            }
-        });
 
         // Обработчик выбора симптомов
         document.addEventListener('change', function(e) {
@@ -461,57 +482,94 @@
                 handleSymptomSelection(e.target);
             }
         });
+        
+        // Восстанавливаем выбранные симптомы при перезагрузке страницы
+        document.querySelectorAll('input[name="symptoms"]:checked').forEach(checkbox => {
+            selectedSymptoms.add(checkbox.value);
+        });
+        updateSelectedCount();
+        
+        // Инициализация подсказок после загрузки всех элементов
+        setTimeout(initTooltips, 100);
     }
 
-    // Отображение конкретной страницы симптомов
-    function showPage(page) {
-        currentPage = page;
-        
-        // Скрываем все симптомы
-        allSymptoms.forEach(item => {
-            item.style.display = 'none';
+    // Функция инициализации подсказок Bootstrap
+    function initTooltips() {
+        // Сначала уничтожаем все существующие подсказки
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            const tooltip = bootstrap.Tooltip.getInstance(el);
+            if (tooltip) {
+                tooltip.dispose();
+            }
         });
         
-        // Показываем симптомы для текущей страницы
-        const startIndex = (page - 1) * symptomsPerPage;
-        const endIndex = startIndex + symptomsPerPage;
-        
-        for (let i = startIndex; i < endIndex && i < allSymptoms.length; i++) {
-            allSymptoms[i].style.display = 'block';
-        }
-        
-        updatePaginationInfo();
+        // Создаем новые подсказки с актуальными данными
+        document.querySelectorAll('.letter-badge').forEach(badge => {
+            updateBadgeTooltip(badge);
+        });
     }
-
-    // Обновление информации о пагинации
-    function updatePaginationInfo() {
-        document.getElementById('pageInfo').textContent = `Страница ${currentPage} из ${totalPages}`;
-        const shownCount = Math.min(symptomsPerPage, allSymptoms.length - (currentPage - 1) * symptomsPerPage);
-        document.getElementById('shownCount').textContent = shownCount;
-        
-        // Блокировка кнопок навигации при достижении границ
-        document.getElementById('prevPage').disabled = currentPage === 1;
-        document.getElementById('nextPage').disabled = currentPage === totalPages;
+    
+    // Обновление подсказки для конкретного бейджа
+    function updateBadgeTooltip(badge) {
+        const sectionElement = badge.closest('.symptom-letter-section');
+        if (sectionElement) {
+            const itemsInSection = sectionElement.querySelectorAll('.symptom-item');
+            let visibleInSection = 0;
+            
+            itemsInSection.forEach(item => {
+                if (item.style.display !== 'none') {
+                    visibleInSection++;
+                }
+            });
+            
+            const sectionLetter = sectionElement.id.replace('letter-', '');
+            
+            // Обновляем атрибут title в HTML
+            badge.setAttribute('title', `Количество симптомов на букву '${sectionLetter}': ${visibleInSection}`);
+            
+            // Удаляем старую подсказку
+            const oldTooltip = bootstrap.Tooltip.getInstance(badge);
+            if (oldTooltip) {
+                oldTooltip.dispose();
+            }
+            
+            // Создаем новую подсказку с актуальными данными
+            new bootstrap.Tooltip(badge, {
+                title: `Количество симптомов на букву '${sectionLetter}': ${visibleInSection}`
+            });
+        }
     }
 
     // Выполнение поиска симптомов
     function performSearch(searchTerm) {
         if (searchTerm === '') {
-            // Если поиск пустой, возвращаем обычную пагинацию
-            showPage(1);
-            document.getElementById('noResultsMessage').style.display = 'none';
-            document.getElementById('paginationControls').style.display = 'block';
-            updateSearchResultsCount(allSymptoms.length);
+            // Если поиск пустой, показываем все симптомы и буквы
+            allSymptomElements.forEach((item) => {
+                item.style.display = 'block';
+                const label = item.querySelector('label');
+                if (label.dataset.original) {
+                    label.innerHTML = label.dataset.original;
+                }
+            });
             
-            document.getElementById('prevPage').style.display = 'inline-block';
-            document.getElementById('nextPage').style.display = 'inline-block';
+            // Показываем все буквенные секции
+            document.querySelectorAll('.symptom-letter-section').forEach(section => {
+                section.style.display = 'block';
+            });
+            
+            document.getElementById('noResultsMessage').style.display = 'none';
+            updateSearchResultsCount(allSymptomElements.length);
+            
+            // Обновляем текст в бейджах и подсказки
+            updateLetterBadgesAndTooltips();
             return;
         }
 
         let foundCount = 0;
+        const foundLetters = new Set();
         
         // Фильтрация симптомов по поисковому запросу
-        allSymptoms.forEach((item) => {
+        allSymptomElements.forEach((item) => {
             const label = item.querySelector('label');
             const originalText = label.dataset.original.toLowerCase();
             const isMatch = originalText.includes(searchTerm);
@@ -519,6 +577,7 @@
             if (isMatch) {
                 foundCount++;
                 item.style.display = 'block';
+                foundLetters.add(item.dataset.letter);
                 
                 // Подсветка найденного текста
                 const highlightedText = label.dataset.original.replace(
@@ -531,22 +590,48 @@
                 label.innerHTML = label.dataset.original;
             }
         });
+        
+        // Показываем только те буквенные секции, где есть результаты
+        document.querySelectorAll('.symptom-letter-section').forEach(section => {
+            const sectionLetter = section.id.replace('letter-', '');
+            if (foundLetters.has(sectionLetter)) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        });
 
-        // Управление отображением сообщений и элементов управления
+        // Управление отображением сообщений
         document.getElementById('noResultsMessage').style.display = foundCount === 0 ? 'block' : 'none';
-        document.getElementById('paginationControls').style.display = foundCount === 0 ? 'none' : 'block';
         updateSearchResultsCount(foundCount);
         
-        if (foundCount > 0) {
-            // В режиме поиска скрываем стандартную пагинацию
-            document.getElementById('pageInfo').textContent = `Найдено: ${foundCount}`;
-            document.getElementById('shownCount').textContent = foundCount;
-            document.getElementById('prevPage').style.display = 'none';
-            document.getElementById('nextPage').style.display = 'none';
-        } else {
-            document.getElementById('prevPage').style.display = 'inline-block';
-            document.getElementById('nextPage').style.display = 'inline-block';
-        }
+        // Обновляем текст в бейджах и подсказки
+        updateLetterBadgesAndTooltips();
+    }
+    
+    // Обновление текста в бейджах и подсказок
+    function updateLetterBadgesAndTooltips() {
+        document.querySelectorAll('.letter-badge').forEach(badge => {
+            const sectionElement = badge.closest('.symptom-letter-section');
+            if (sectionElement && sectionElement.style.display !== 'none') {
+                const itemsInSection = sectionElement.querySelectorAll('.symptom-item');
+                let visibleInSection = 0;
+                
+                itemsInSection.forEach(item => {
+                    if (item.style.display !== 'none') {
+                        visibleInSection++;
+                    }
+                });
+                
+                const sectionLetter = sectionElement.id.replace('letter-', '');
+                
+                // Обновляем текст в бейдже
+                badge.textContent = visibleInSection;
+                
+                // Обновляем подсказку
+                updateBadgeTooltip(badge);
+            }
+        });
     }
 
     // Обработка выбора/снятия выбора симптома

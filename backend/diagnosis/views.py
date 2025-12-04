@@ -62,8 +62,34 @@ def home(request):
     Отображает форму для выбора симптомов и основную информацию о системе.
     Если модель не загружена, показывает предупреждение.
     """
+    # Подготавливаем симптомы для отображения с группировкой по буквам
+    symptoms_by_letter = {}
+
+    for symptom in symptoms_list:
+        if symptom:  # Проверяем, что симптом не пустой
+            # Берем первую букву в верхнем регистре
+            first_letter = symptom[0].upper() if symptom else ""
+
+            # Если буква не кириллица, помещаем в "#" (цифры/символы)
+            if not ("А" <= first_letter <= "Я"):
+                first_letter = "#"
+
+            # Добавляем симптом в соответствующую группу
+            if first_letter not in symptoms_by_letter:
+                symptoms_by_letter[first_letter] = []
+            symptoms_by_letter[first_letter].append(symptom)
+
+    # Сортируем группы по буквам
+    sorted_letters = sorted(symptoms_by_letter.keys())
+    sorted_symptoms_by_letter = {}
+
+    for letter in sorted_letters:
+        # Сортируем симптомы внутри каждой группы
+        sorted_symptoms_by_letter[letter] = sorted(symptoms_by_letter[letter])
+
     context = {
-        "symptoms": symptoms_list,
+        "symptoms": symptoms_list,  # Оставляем для обратной совместимости
+        "symptoms_by_letter": sorted_symptoms_by_letter,  # Новый формат для группировки
         "symptoms_count": len(symptoms_list),
         "diseases_count": len(diseases_list) if diseases_list else 0,
         "model_loaded": model_loaded_successfully,

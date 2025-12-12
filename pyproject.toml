@@ -1,0 +1,95 @@
+[tool.black]
+line-length = 120
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  | \.git
+  | \.venv
+  | venv
+  | static
+  | templates
+  | migrations
+  | __pycache__
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_first_party = ["diagnosis"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+[tool.flake8]
+max-line-length = 120
+ignore = "E203, W503, E501, F401, F841"
+exclude = [
+    ".git",
+    "__pycache__",
+    "*.pyc", 
+    ".venv",
+    "venv",
+    "migrations",
+    "static",
+    "templates",
+    "backend/static",
+    "backend/templates"
+]
+per-file-ignores = [
+    "*/migrations/*:F401",
+    "*/settings.py:F401",
+    "diagnosis/disease_data.py:E501"
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "medical_site.settings"
+testpaths = ["."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--tb=short",
+    "--strict-markers", 
+    "--ignore=venv_corrupted",
+    "--cov=diagnosis",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=85"
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "smoke: Smoke tests (basic functionality checks)",
+    "regression: Regression tests"
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "*/migrations/*", 
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/venv_corrupted/*",
+    "*/static/*",
+    "*/templates/*",
+    "manage.py",
+    "medical_site/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError", 
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\b:",
+    "@(abc\\.)?abstractmethod"
+]

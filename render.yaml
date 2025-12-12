@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: medical-diagnosis-app
+    env: python
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn medical_site.wsgi:application
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true

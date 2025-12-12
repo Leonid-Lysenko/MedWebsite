@@ -1,0 +1,31 @@
+name: Run Tests
+
+on: [push, pull_request]
+
+jobs:
+  quality:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements-dev.txt
+    
+    - name: Code quality checks
+      run: |
+        cd backend
+        black --check .
+        isort --check-only .
+        flake8 .
+
+    - name: Run tests (skip E2E)
+      run: |
+        cd backend
+        pytest -m "not e2e"

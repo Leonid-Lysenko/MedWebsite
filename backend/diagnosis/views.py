@@ -7,7 +7,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from .disease_data import get_disease_info
+from .models import Disease
 
 
 def load_symptoms():
@@ -53,6 +53,36 @@ except Exception as e:
     diseases_list = []
     model_loaded_successfully = False
     model_error_message = "система диагностики временно недоступна"
+
+
+def get_disease_info_from_db(disease_name):
+    """
+    Возвращает информацию о заболевании из PostgreSQL через Django ORM.
+    Если заболевание не найдено, возвращает базовую информацию.
+    """
+    try:
+        # Пытаемся получить объект Disease по имени
+        disease_obj = Disease.objects.get(name__iexact=disease_name) # __iexact для регистронезависимого поиска
+        
+        # Возвращаем данные в старом формате словаря для совместимости
+        return {
+            "description": disease_obj.description,
+            "treatment": disease_obj.treatment,
+            "symptoms": disease_obj.symptoms, 
+            "severity": disease_obj.severity,
+            "specialist": disease_obj.specialist,
+            "category": disease_obj.category,
+        }
+    except Disease.DoesNotExist:
+        # Возвращаем базовую информацию для неизвестных заболеваний
+        return {
+            "description": f"Информация о заболевании '{disease_name}' готовится нашими специалистами. Обратитесь к врачу для точной диагностики и лечения.",
+            "treatment": "Для назначения лечения обратитесь к квалифицированному медицинскому специалисту. Не занимайтесь самолечением.",
+            "symptoms": ["Информация уточняется"],
+            "severity": "unknown",
+            "specialist": "Терапевт",
+            "category": "Уточняется",
+        }
 
 
 def home(request):
@@ -190,28 +220,16 @@ def how_to_use(request):
 def get_disease_description(disease_name):
     """
     Возвращает описание заболевания из базы знаний.
-
-    Args:
-        disease_name (str): Название заболевания
-
-    Returns:
-        str: Описание заболевания
     """
-    disease_info = get_disease_info(disease_name)
+    disease_info = get_disease_info_from_db(disease_name)
     return disease_info["description"]
 
 
 def get_disease_treatment(disease_name):
     """
     Возвращает рекомендации по лечению заболевания из базы знаний.
-
-    Args:
-        disease_name (str): Название заболевания
-
-    Returns:
-        str: Рекомендации по лечению
     """
-    disease_info = get_disease_info(disease_name)
+    disease_info = get_disease_info_from_db(disease_name)
     return disease_info["treatment"]
 
 
@@ -248,7 +266,7 @@ def disease_detail(request, disease_name):
     Returns:
         HttpResponse: Страница с детальной информацией или страница "не найдено"
     """
-    disease_info = get_disease_info(disease_name)
+    disease_info = get_disease_info_from_db(disease_name)
 
     # Определяем источник перехода для корректного отображения навигации
     is_from_knowledge_base = "knowledge-base/disease" in request.path
@@ -295,24 +313,32 @@ def knowledge_base(request):
 
     Группирует заболевания по алфавиту для удобной навигации.
     """
-    # Получаем все заболевания из ML-модели
-    all_diseases = model.classes_.tolist() if model else []
+    # Получаем все заболевания из БД
+    all_diseases_objects = Disease.objects.order_by('name').all()
 
     # Загружаем дополнительную информацию для каждого заболевания
     diseases_with_info = []
-    for disease_name in sorted(all_diseases):
-        disease_info = get_disease_info(disease_name)
+
+    for disease_obj in all_diseases_objects:
 
         # Преобразуем код серьезности в читаемый текст
-        severity_text = get_severity_display(disease_info["severity"])
+        severity_text = get_severity_display(disease_obj.severity)
 
         diseases_with_info.append(
-            {
-                "name": disease_name,
-                "info": disease_info,
-                "severity_display": severity_text,
-            }
-        )
+                    {
+                        "name": disease_obj.name,
+                        "info": { # Собираем словарь для совместимости с шаблонами
+                            "description": disease_obj.description,
+                            "treatment": disease_obj.treatment,
+                            "symptoms": disease_obj.symptoms,
+                            "severity": disease_obj.severity,
+                            "specialist": disease_obj.specialist,
+                            "category": disease_obj.category,
+                        },
+                        "severity_display": severity_text,
+                    }
+                )
+        
 
     # Группируем заболевания по первой букве для алфавитного указателя
     diseases_by_letter = {}
@@ -325,7 +351,7 @@ def knowledge_base(request):
     return render(
         request,
         "diagnosis/knowledge_base.html",
-        {"diseases_by_letter": diseases_by_letter, "total_diseases": len(all_diseases)},
+        {"diseases_by_letter": diseases_by_letter, "total_diseases": len(all_diseases_objects)}
     )
 
 

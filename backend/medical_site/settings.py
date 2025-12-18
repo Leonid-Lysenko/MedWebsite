@@ -81,13 +81,13 @@ WSGI_APPLICATION = "medical_site.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'diagnostics_db',
-        'USER': 'postgres',
-        'PASSWORD': 'medic1312',
-        'HOST': 'localhost',
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "diagnostics_db",
+        "USER": "postgres",
+        "PASSWORD": "medic1312",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 

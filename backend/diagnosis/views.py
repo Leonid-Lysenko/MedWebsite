@@ -41,7 +41,7 @@ model_error_message = ""
 # Инициализация ML-модели и данных при запуске приложения
 try:
     model = joblib.load(settings.ML_MODEL_PATH)
-    symptoms_list = list(Symptom.objects.all().order_by('id').values_list('name', flat=True))
+    symptoms_list = list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
     diseases_list = model.classes_.tolist()
     model_loaded_successfully = True
     model_error_message = ""
@@ -50,7 +50,7 @@ except Exception as e:
     # В случае ошибки загрузки модели инициализируем пустые структуры
     model = None
     try:
-        symptoms_list = list(Symptom.objects.all().order_by('id').values_list('name', flat=True))
+        symptoms_list = list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
     except:
         symptoms_list = []
     diseases_list = []
@@ -65,13 +65,13 @@ def get_disease_info_from_db(disease_name):
     """
     try:
         # Пытаемся получить объект Disease по имени
-        disease_obj = Disease.objects.get(name__iexact=disease_name) # __iexact для регистронезависимого поиска
-        
+        disease_obj = Disease.objects.get(name__iexact=disease_name)  # __iexact для регистронезависимого поиска
+
         # Возвращаем данные в старом формате словаря для совместимости
         return {
             "description": disease_obj.description,
             "treatment": disease_obj.treatment,
-            "symptoms": disease_obj.symptoms, 
+            "symptoms": disease_obj.symptoms,
             "severity": disease_obj.severity,
             "specialist": disease_obj.specialist,
             "category": disease_obj.category,
@@ -145,7 +145,7 @@ def predict(request):
 
     if request.method == "POST" and model is not None:
         try:
-            current_symptoms = list(Symptom.objects.all().order_by('id').values_list('name', flat=True))
+            current_symptoms = list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
 
             # Получаем список выбранных симптомов из формы
             selected_symptoms = request.POST.getlist("symptoms")
@@ -319,7 +319,7 @@ def knowledge_base(request):
     Группирует заболевания по алфавиту для удобной навигации.
     """
     # Получаем все заболевания из БД
-    all_diseases_objects = Disease.objects.order_by('name').all()
+    all_diseases_objects = Disease.objects.order_by("name").all()
 
     # Загружаем дополнительную информацию для каждого заболевания
     diseases_with_info = []
@@ -330,20 +330,19 @@ def knowledge_base(request):
         severity_text = get_severity_display(disease_obj.severity)
 
         diseases_with_info.append(
-                    {
-                        "name": disease_obj.name,
-                        "info": { # Собираем словарь для совместимости с шаблонами
-                            "description": disease_obj.description,
-                            "treatment": disease_obj.treatment,
-                            "symptoms": disease_obj.symptoms,
-                            "severity": disease_obj.severity,
-                            "specialist": disease_obj.specialist,
-                            "category": disease_obj.category,
-                        },
-                        "severity_display": severity_text,
-                    }
-                )
-        
+            {
+                "name": disease_obj.name,
+                "info": {  # Собираем словарь для совместимости с шаблонами
+                    "description": disease_obj.description,
+                    "treatment": disease_obj.treatment,
+                    "symptoms": disease_obj.symptoms,
+                    "severity": disease_obj.severity,
+                    "specialist": disease_obj.specialist,
+                    "category": disease_obj.category,
+                },
+                "severity_display": severity_text,
+            }
+        )
 
     # Группируем заболевания по первой букве для алфавитного указателя
     diseases_by_letter = {}
@@ -356,7 +355,7 @@ def knowledge_base(request):
     return render(
         request,
         "diagnosis/knowledge_base.html",
-        {"diseases_by_letter": diseases_by_letter, "total_diseases": len(all_diseases_objects)}
+        {"diseases_by_letter": diseases_by_letter, "total_diseases": len(all_diseases_objects)},
     )
 
 

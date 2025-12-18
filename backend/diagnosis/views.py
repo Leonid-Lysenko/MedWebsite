@@ -7,7 +7,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from .models import Disease
+from .models import Disease, Symptom
 
 
 def load_symptoms():
@@ -41,7 +41,7 @@ model_error_message = ""
 # Инициализация ML-модели и данных при запуске приложения
 try:
     model = joblib.load(settings.ML_MODEL_PATH)
-    symptoms_list = load_symptoms()
+    symptoms_list = list(Symptom.objects.all().order_by('id').values_list('name', flat=True))
     diseases_list = model.classes_.tolist()
     model_loaded_successfully = True
     model_error_message = ""
@@ -49,7 +49,10 @@ try:
 except Exception as e:
     # В случае ошибки загрузки модели инициализируем пустые структуры
     model = None
-    symptoms_list = load_symptoms()
+    try:
+        symptoms_list = list(Symptom.objects.all().order_by('id').values_list('name', flat=True))
+    except:
+        symptoms_list = []
     diseases_list = []
     model_loaded_successfully = False
     model_error_message = "система диагностики временно недоступна"
@@ -142,16 +145,18 @@ def predict(request):
 
     if request.method == "POST" and model is not None:
         try:
+            current_symptoms = list(Symptom.objects.all().order_by('id').values_list('name', flat=True))
+
             # Получаем список выбранных симптомов из формы
             selected_symptoms = request.POST.getlist("symptoms")
 
             # Создаем бинарный вектор симптомов для ML-модели
-            input_vector = np.zeros(len(symptoms_list))
+            input_vector = np.zeros(len(current_symptoms))
 
             # Заполняем вектор: 1 - симптом присутствует, 0 - отсутствует
             for symptom in selected_symptoms:
-                if symptom in symptoms_list:
-                    idx = symptoms_list.index(symptom)
+                if symptom in current_symptoms:
+                    idx = current_symptoms.index(symptom)
                     input_vector[idx] = 1
 
             # Проверяем, что выбран хотя бы один симптом

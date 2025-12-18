@@ -30,3 +30,19 @@ class Disease(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Symptom(models.Model):
+    name = models.CharField(
+        max_length=255, 
+        unique=True, 
+        verbose_name="Название симптома"
+    )
+
+    class Meta:
+        verbose_name = "Симптом"
+        verbose_name_plural = "Симптомы"
+        ordering = ['id'] # Важно для сохранения порядка вектора в ML
+
+    def __str__(self):
+        return self.name

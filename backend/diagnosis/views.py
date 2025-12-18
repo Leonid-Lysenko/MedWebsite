@@ -32,16 +32,19 @@ def load_symptoms():
 
 # Глобальные переменные для отслеживания состояния системы
 model = None
-symptoms_list = []
 diseases_list = []
 model_loaded_successfully = False
 model_error_message = ""
 
 
+def get_ml_symptoms():
+    """Централизованное получение списка симптомов из БД для ML-логики."""
+    return list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
+
+
 # Инициализация ML-модели и данных при запуске приложения
 try:
     model = joblib.load(settings.ML_MODEL_PATH)
-    symptoms_list = list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
     diseases_list = model.classes_.tolist()
     model_loaded_successfully = True
     model_error_message = ""
@@ -49,10 +52,6 @@ try:
 except Exception as e:
     # В случае ошибки загрузки модели инициализируем пустые структуры
     model = None
-    try:
-        symptoms_list = list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
-    except:
-        symptoms_list = []
     diseases_list = []
     model_loaded_successfully = False
     model_error_message = "система диагностики временно недоступна"
@@ -95,10 +94,12 @@ def home(request):
     Отображает форму для выбора симптомов и основную информацию о системе.
     Если модель не загружена, показывает предупреждение.
     """
+    current_symptoms = get_ml_symptoms()
+
     # Подготавливаем симптомы для отображения с группировкой по буквам
     symptoms_by_letter = {}
 
-    for symptom in symptoms_list:
+    for symptom in current_symptoms:
         if symptom:  # Проверяем, что симптом не пустой
             # Берем первую букву в верхнем регистре
             first_letter = symptom[0].upper() if symptom else ""
@@ -121,9 +122,9 @@ def home(request):
         sorted_symptoms_by_letter[letter] = sorted(symptoms_by_letter[letter])
 
     context = {
-        "symptoms": symptoms_list,  # Оставляем для обратной совместимости
+        "symptoms": current_symptoms,  # Оставляем для обратной совместимости
         "symptoms_by_letter": sorted_symptoms_by_letter,  # Новый формат для группировки
-        "symptoms_count": len(symptoms_list),
+        "symptoms_count": len(current_symptoms),
         "diseases_count": len(diseases_list) if diseases_list else 0,
         "model_loaded": model_loaded_successfully,
         "model_error": model_error_message,
@@ -145,7 +146,7 @@ def predict(request):
 
     if request.method == "POST" and model is not None:
         try:
-            current_symptoms = list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
+            current_symptoms = get_ml_symptoms()
 
             # Получаем список выбранных симптомов из формы
             selected_symptoms = request.POST.getlist("symptoms")

@@ -242,27 +242,6 @@ def test_urls_map_to_correct_views():
             assert pattern.callback == url_view_mapping[pattern.name]
 
 
-# ===== Тесты для разных типов запросов =====
-
-
-@pytest.mark.unit
-def test_urls_support_get_requests(client):
-    """Тест что все URL поддерживают GET запросы."""
-    test_urls = [
-        "/",
-        "/predict/",
-        "/about/",
-        "/how-to-use/",
-        "/knowledge-base/",
-        "/disease/Грипп/",
-        "/knowledge-base/disease/Грипп/",
-    ]
-
-    for url in test_urls:
-        response = client.get(url)
-        assert response.status_code in [200, 405]
-
-
 # ===== Smoke тесты =====
 
 

@@ -12,6 +12,7 @@ def get_ml_symptoms():
     """Централизованное получение списка симптомов из БД для ML-логики."""
     return list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
 
+
 # Глобальные переменные для отслеживания состояния системы
 model = None
 diseases_list = []

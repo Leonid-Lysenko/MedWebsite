@@ -1,5 +1,3 @@
-import os
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -10,37 +8,15 @@ from django.shortcuts import render
 from .models import Disease, Symptom
 
 
-def load_symptoms():
-    """
-    Загружает список симптомов из текстового файла.
-
-    Returns:
-        list: Список симптомов или пустой список в случае ошибки
-    """
-    try:
-        symptoms_file = os.path.join(os.path.dirname(__file__), "translated_columns_list.txt")
-        if os.path.exists(symptoms_file):
-            with open(symptoms_file, "r", encoding="utf-8") as f:
-                symptoms = [line.strip() for line in f if line.strip()]
-            return symptoms
-    except Exception as e:
-        # Обработка ошибки чтения файла
-        pass
-
-    return []
-
+def get_ml_symptoms():
+    """Централизованное получение списка симптомов из БД для ML-логики."""
+    return list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
 
 # Глобальные переменные для отслеживания состояния системы
 model = None
 diseases_list = []
 model_loaded_successfully = False
 model_error_message = ""
-
-
-def get_ml_symptoms():
-    """Централизованное получение списка симптомов из БД для ML-логики."""
-    return list(Symptom.objects.all().order_by("id").values_list("name", flat=True))
-
 
 # Инициализация ML-модели и данных при запуске приложения
 try:

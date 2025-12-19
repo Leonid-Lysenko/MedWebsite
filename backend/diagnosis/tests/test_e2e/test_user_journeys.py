@@ -113,7 +113,7 @@ def test_knowledge_base_navigation(browser, live_server_url, wait):
         for selector in link_selectors:
             links = browser.find_elements(By.CSS_SELECTOR, selector)
             # Фильтруем пустые href
-            valid_links = [l for l in links if l.get_attribute("href") and "/disease/" in l.get_attribute("href")]
+            valid_links = [link for link in links if link.get_attribute("href") and "/disease/" in link.get_attribute("href")]
             if valid_links:
                 disease_links.extend(valid_links)
                 break

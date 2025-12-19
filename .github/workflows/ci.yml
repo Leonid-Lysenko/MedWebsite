@@ -4,8 +4,23 @@ on: [push, pull_request]
 
 jobs:
   quality:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: diagnostics_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: medic1312
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v4
     
